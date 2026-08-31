@@ -47,12 +47,10 @@ const slideIds = [
   'closer',
   'kostya-birthday',
   'final-bell',
-  'little-things',
+  'compliments',
   'counter',
   'final',
 ] as const;
-
-const DISCO_SLIDE_INDEX = slideIds.indexOf('disco');
 
 function MemoryImage({
   src,
@@ -153,16 +151,6 @@ function Background({
   );
 }
 
-function ChapterLabel({ event }: { event: StoryEvent }) {
-  return (
-    <div className="mb-3 flex items-center gap-3 text-[8px] font-semibold uppercase tracking-[0.26em] text-white/48 sm:mb-5 sm:text-[10px]">
-      <span className="text-accent">{event.chapter}</span>
-      <span className="h-px w-7 bg-white/20" />
-      <span>{event.eyebrow}</span>
-    </div>
-  );
-}
-
 function EventCopy({
   event,
   compact = false,
@@ -172,7 +160,6 @@ function EventCopy({
 }) {
   return (
     <div className="max-w-3xl">
-      <ChapterLabel event={event} />
       {event.date && (
         <p className="mb-2 text-[9px] uppercase tracking-[0.25em] text-accent sm:mb-4 sm:text-[11px]">
           {event.date}
@@ -353,7 +340,7 @@ function BeginningSlide() {
       <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
         <div className="max-w-2xl">
           <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
-            {story.intro.chapter} · {story.intro.date}
+            {story.intro.date}
           </p>
           <h2 className="text-[clamp(2.7rem,11vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
             {story.intro.title}
@@ -427,12 +414,10 @@ function FirstMeetingSlide() {
 
 function AutoPhotoSlide({
   images,
-  eyebrow,
   title,
   text,
 }: {
   images: readonly GalleryImage[];
-  eyebrow: string;
   title: string;
   text?: string;
 }) {
@@ -472,10 +457,7 @@ function AutoPhotoSlide({
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/78 via-black/8 to-black/34" />
       <div className="flex h-full items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
         <div className="max-w-3xl">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
-            {eyebrow}
-          </p>
-          <h2 className="mt-3 text-[clamp(2.8rem,12vw,7.5rem)] font-light leading-[0.87] tracking-[-0.07em]">
+          <h2 className="text-[clamp(2.8rem,12vw,7.5rem)] font-light leading-[0.87] tracking-[-0.07em]">
             {title}
           </h2>
           {text && (
@@ -509,6 +491,35 @@ function CinematicEventSlide({
   event: StoryEvent;
   contain?: boolean;
 }) {
+  if (event.video) {
+    return (
+      <section className="relative isolate h-full overflow-hidden">
+        <video
+          src={event.video}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+          aria-label={event.imageAlt ?? event.title}
+        >
+          <track
+            kind="captions"
+            src="/captions/her-birthday.vtt"
+            srcLang="ru"
+            label="Русские субтитры"
+          />
+        </video>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black via-black/68 to-black/20" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/72 via-transparent to-black/20" />
+        <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
+          <EventCopy event={event} />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <Background image={event.image} alt={event.imageAlt} contain={contain}>
       <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
@@ -627,33 +638,61 @@ function KostyaBirthdaySlide() {
   );
 }
 
-function LittleThingsSlide() {
+function ComplimentsSlide() {
+  const positions = [
+    { left: '5%', top: '14%', rotate: -7 },
+    { left: '56%', top: '10%', rotate: 5 },
+    { left: '70%', top: '26%', rotate: -4 },
+    { left: '8%', top: '36%', rotate: 6 },
+    { left: '62%', top: '52%', rotate: 4 },
+    { left: '4%', top: '68%', rotate: -5 },
+    { left: '46%', top: '76%', rotate: 6 },
+    { left: '74%', top: '70%', rotate: -6 },
+    { left: '26%', top: '8%', rotate: 3 },
+    { left: '22%', top: '80%', rotate: -3 },
+  ];
+
   return (
-    <section className="hero-glow h-full overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 sm:pt-20 lg:px-20">
-      <div className="mx-auto flex h-full max-w-7xl flex-col justify-center">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
-          {story.littleThingsSection.eyebrow}
-        </p>
-        <h2 className="mt-3 text-[clamp(2.7rem,10vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
-          {story.littleThingsSection.title}
-        </h2>
-        <div className="mt-5 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:gap-3">
-          {story.littleThings.map((thing) => (
-            <article
-              key={thing.index}
-              className="rounded-2xl border border-white/9 bg-white/[0.025] p-4 sm:min-h-48 sm:p-5"
-            >
-              <span className="text-[8px] tracking-[0.25em] text-accent">
-                {thing.index}
-              </span>
-              <h3 className="mt-2 font-serif text-xl italic text-white sm:mt-8 sm:text-3xl">
-                {thing.title}
-              </h3>
-              <p className="mt-1.5 text-[11px] leading-4 text-white/48 sm:mt-3 sm:text-sm sm:leading-6">
-                {thing.text}
-              </p>
-            </article>
-          ))}
+    <section className="hero-glow relative h-full overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
+      {story.compliments.map((compliment, index) => {
+        const position = positions[index];
+        return (
+          <motion.span
+            key={compliment}
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: [0.18, 0.72, 0.35, 0.68],
+              x: [0, index % 2 === 0 ? 12 : -10, 0],
+              y: [0, -12, 8, 0],
+              rotate: [
+                position.rotate,
+                position.rotate + (index % 2 === 0 ? 3 : -3),
+                position.rotate,
+              ],
+            }}
+            transition={{
+              duration: 8 + (index % 4) * 1.7,
+              delay: index * 0.22,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{ left: position.left, top: position.top }}
+            className={`absolute max-w-44 font-serif text-lg italic text-white/55 sm:max-w-none sm:text-2xl ${
+              index > 6 ? 'hidden sm:block' : ''
+            }`}
+          >
+            {compliment}
+          </motion.span>
+        );
+      })}
+      <div className="relative z-10 mx-auto grid h-full max-w-5xl place-items-center text-center">
+        <div className="rounded-[2rem] bg-black/38 px-5 py-7 backdrop-blur-sm sm:px-12 sm:py-10">
+          <h2 className="text-[clamp(2.8rem,11vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
+            {story.complimentsSection.title}
+          </h2>
+          <p className="mx-auto mt-5 max-w-lg font-serif text-lg italic text-accent sm:text-2xl">
+            {story.complimentsSection.text}
+          </p>
         </div>
       </div>
     </section>
@@ -661,20 +700,23 @@ function LittleThingsSlide() {
 }
 
 function CounterSlide() {
-  const values = useMemo(() => {
-    const now = new Date();
-    const start = new Date(story.dates.relationship);
-    const days = Math.max(
-      0,
-      Math.floor((now.getTime() - start.getTime()) / 86_400_000),
-    );
-    let months =
-      (now.getFullYear() - start.getFullYear()) * 12 +
-      now.getMonth() -
-      start.getMonth();
-    if (now.getDate() < start.getDate()) months -= 1;
-    return { days, months: Math.max(0, months) };
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
   }, []);
+
+  const values = useMemo(() => {
+    const start = new Date(story.dates.relationship).getTime();
+    const totalSeconds = Math.max(0, Math.floor((now - start) / 1000));
+    return {
+      days: Math.floor(totalSeconds / 86_400),
+      hours: Math.floor((totalSeconds % 86_400) / 3600),
+      minutes: Math.floor((totalSeconds % 3600) / 60),
+      seconds: totalSeconds % 60,
+    };
+  }, [now]);
 
   return (
     <section className="hero-glow grid h-full place-items-center overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
@@ -685,7 +727,7 @@ function CounterSlide() {
         <h2 className="mt-4 text-3xl font-light tracking-[-0.05em] sm:text-6xl">
           {story.counter.title}
         </h2>
-        <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-12 sm:gap-5">
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-12 sm:grid-cols-4 sm:gap-4">
           <div className="rounded-3xl border border-white/9 bg-white/[0.025] px-3 py-8 sm:py-12">
             <strong className="block text-[clamp(3.5rem,16vw,8rem)] font-light leading-none tracking-[-0.08em]">
               {values.days}
@@ -695,11 +737,27 @@ function CounterSlide() {
             </span>
           </div>
           <div className="rounded-3xl border border-white/9 bg-white/[0.025] px-3 py-8 sm:py-12">
-            <strong className="block text-[clamp(3.5rem,16vw,8rem)] font-light leading-none tracking-[-0.08em] text-accent">
-              {values.months}
+            <strong className="block text-[clamp(3.5rem,16vw,7rem)] font-light leading-none tracking-[-0.08em] text-accent">
+              {String(values.hours).padStart(2, '0')}
             </strong>
             <span className="mt-3 block text-[9px] uppercase tracking-[0.25em] text-white/38">
-              месяцев
+              часов
+            </span>
+          </div>
+          <div className="rounded-3xl border border-white/9 bg-white/[0.025] px-3 py-8 sm:py-12">
+            <strong className="block text-[clamp(3.5rem,16vw,7rem)] font-light leading-none tracking-[-0.08em]">
+              {String(values.minutes).padStart(2, '0')}
+            </strong>
+            <span className="mt-3 block text-[9px] uppercase tracking-[0.25em] text-white/38">
+              минут
+            </span>
+          </div>
+          <div className="rounded-3xl border border-white/9 bg-white/[0.025] px-3 py-8 sm:py-12">
+            <strong className="block text-[clamp(3.5rem,16vw,7rem)] font-light leading-none tracking-[-0.08em] text-accent">
+              {String(values.seconds).padStart(2, '0')}
+            </strong>
+            <span className="mt-3 block text-[9px] uppercase tracking-[0.25em] text-white/38">
+              секунд
             </span>
           </div>
         </div>
@@ -709,8 +767,6 @@ function CounterSlide() {
 }
 
 function FinalSlide() {
-  const [answerOpen, setAnswerOpen] = useState(false);
-
   return (
     <Background image={story.final.image} alt={story.final.imageAlt} contain>
       <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
@@ -726,7 +782,7 @@ function FinalSlide() {
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
-          <div className="mt-4 flex items-end justify-between gap-4 sm:mt-7">
+          <div className="mt-4 sm:mt-7">
             <div>
               <p className="font-serif text-xl italic text-white sm:text-4xl">
                 {story.final.signature}
@@ -735,26 +791,7 @@ function FinalSlide() {
                 {story.final.author}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setAnswerOpen((open) => !open)}
-              className="shrink-0 rounded-full border border-white/16 bg-black/30 px-4 py-2 text-[10px] text-white backdrop-blur-md sm:px-5 sm:py-3 sm:text-xs"
-            >
-              {story.final.nextQuestion}
-            </button>
           </div>
-          <AnimatePresence>
-            {answerOpen && (
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mt-3 font-serif text-2xl italic text-accent sm:text-4xl"
-              >
-                {story.final.nextAnswer}
-              </motion.p>
-            )}
-          </AnimatePresence>
         </div>
       </div>
     </Background>
@@ -778,7 +815,6 @@ function renderSlide(index: number, onStart: () => void) {
       return (
         <AutoPhotoSlide
           images={story.gallery.slice(0, 7)}
-          eyebrow={story.summer.eyebrow}
           title={story.summer.title}
           text={story.summer.text}
         />
@@ -795,7 +831,6 @@ function renderSlide(index: number, onStart: () => void) {
       return (
         <AutoPhotoSlide
           images={story.gallery.slice(3)}
-          eyebrow={story.everyday.eyebrow}
           title={story.everyday.title}
           text={story.everyday.text}
         />
@@ -804,8 +839,8 @@ function renderSlide(index: number, onStart: () => void) {
       return <KostyaBirthdaySlide />;
     case 'final-bell':
       return <CinematicEventSlide event={finalBell} contain />;
-    case 'little-things':
-      return <LittleThingsSlide />;
+    case 'compliments':
+      return <ComplimentsSlide />;
     case 'counter':
       return <CounterSlide />;
     case 'final':
@@ -943,12 +978,8 @@ export function StoryExperience() {
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
 
-  const activeTrackKey = current >= DISCO_SLIDE_INDEX ? 'disco' : 'intro';
-  const activeTrack = story.soundtrack[activeTrackKey];
-  const hasSoundtrack = Boolean(
-    story.soundtrack.intro.file || story.soundtrack.disco.file,
-  );
-  const previousTrack = useRef(activeTrackKey);
+  const activeTrack = story.soundtrack.intro;
+  const hasSoundtrack = Boolean(activeTrack.file);
 
   const goTo = useCallback(
     (target: number) => {
@@ -967,19 +998,6 @@ export function StoryExperience() {
       playWithFade(audio, setAudioPlaying);
     }
   };
-
-  useEffect(() => {
-    if (!unlocked || previousTrack.current === activeTrackKey) return;
-    previousTrack.current = activeTrackKey;
-    const audio = audioRef.current;
-    if (!audio || !activeTrack.file) return;
-    audio.load();
-    const timer = window.setTimeout(
-      () => playWithFade(audio, setAudioPlaying),
-      60,
-    );
-    return () => window.clearTimeout(timer);
-  }, [activeTrack.file, activeTrackKey, unlocked]);
 
   const toggleAudio = () => {
     const audio = audioRef.current;
