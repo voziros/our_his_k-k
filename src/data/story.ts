@@ -21,6 +21,13 @@ export type GalleryImage = {
 };
 
 export const story = {
+  access: {
+    code: '12.05.2025',
+    prompt: 'Введи дату нашего знакомства',
+    hint: 'дд.мм.гггг',
+    error: 'Нет, котей. Вспомни день, с которого всё началось.',
+    button: 'Открыть нашу историю',
+  },
   people: {
     first: 'Костя',
     second: 'Ксюша',
@@ -228,12 +235,12 @@ export const story = {
     intro: {
       title: 'Любовь HD1080',
       artist: 'Каспийский Груз',
-      file: null as string | null,
+      file: '/music/track-1.mp3' as string | null,
     },
     disco: {
       title: 'Цепи-ленты',
       artist: 'Скриптонит × Ёлка',
-      file: null as string | null,
+      file: '/music/track-2.mp3' as string | null,
     },
   },
   littleThings: [

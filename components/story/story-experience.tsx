@@ -1,17 +1,20 @@
 'use client';
 
-/* oxlint-disable next/no-img-element -- local user photos need deliberate contain/crop behavior */
+/* oxlint-disable next/no-img-element -- local user photos need deliberate crop behavior */
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-} from 'framer-motion';
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type SyntheticEvent,
+} from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
-  ArrowDown,
+  ArrowRight,
+  ChevronLeft,
   ChevronRight,
   Expand,
   MapPin,
@@ -21,9 +24,9 @@ import {
   Sparkles,
   Volume2,
   VolumeX,
+  X,
 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import { story, type GalleryImage, type StoryEvent } from '@/src/data/story';
 
 const eventById = (id: string) => {
@@ -32,54 +35,24 @@ const eventById = (id: string) => {
   return event;
 };
 
-function playWithFade(
-  audio: HTMLAudioElement,
-  onPlaying: (playing: boolean) => void,
-) {
-  audio.volume = 0;
-  void audio
-    .play()
-    .then(() => {
-      onPlaying(true);
-      const startedAt = performance.now();
-      const tick = (time: number) => {
-        const progress = Math.min((time - startedAt) / 2200, 1);
-        audio.volume = progress * 0.22;
-        if (progress < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    })
-    .catch(() => onPlaying(false));
-}
+const slideIds = [
+  'cover',
+  'beginning',
+  'first-meeting',
+  'summer',
+  'birthday',
+  'october',
+  'official',
+  'disco',
+  'closer',
+  'kostya-birthday',
+  'final-bell',
+  'little-things',
+  'counter',
+  'final',
+] as const;
 
-function Reveal({
-  children,
-  className = '',
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  const reduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      initial={{
-        opacity: 0,
-        y: reduceMotion ? 0 : 28,
-        filter: reduceMotion ? 'none' : 'blur(7px)',
-      }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once: true, amount: 0.18 }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.85,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
+const DISCO_SLIDE_INDEX = slideIds.indexOf('disco');
 
 function MemoryImage({
   src,
@@ -99,9 +72,9 @@ function MemoryImage({
   if (failed) {
     return (
       <div
-        className={`grid place-items-center bg-[#171719] p-6 text-center text-xs text-white/38 ${className}`}
+        className={`grid place-items-center bg-[#111113] p-6 text-center text-xs text-white/38 ${className}`}
       >
-        <span>Это воспоминание пока осталось за кадром</span>
+        Это воспоминание пока осталось за кадром
       </div>
     );
   }
@@ -118,35 +91,111 @@ function MemoryImage({
   );
 }
 
-function ChapterMark({ event }: { event: StoryEvent }) {
+function playWithFade(
+  audio: HTMLAudioElement,
+  onPlaying: (playing: boolean) => void,
+) {
+  audio.volume = 0;
+  void audio
+    .play()
+    .then(() => {
+      onPlaying(true);
+      const startedAt = performance.now();
+      const tick = (time: number) => {
+        const progress = Math.min((time - startedAt) / 1600, 1);
+        audio.volume = progress * 0.24;
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    })
+    .catch(() => onPlaying(false));
+}
+
+function Background({
+  image,
+  alt = '',
+  contain = false,
+  children,
+  dim = 'bg-gradient-to-r from-black via-black/66 to-black/22',
+}: {
+  image?: string;
+  alt?: string;
+  contain?: boolean;
+  children: ReactNode;
+  dim?: string;
+}) {
   return (
-    <div className="mb-7 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/42">
+    <section className="relative isolate h-full overflow-hidden">
+      {image ? (
+        <>
+          {contain && (
+            <MemoryImage
+              src={image}
+              alt=""
+              eager
+              className="absolute inset-0 -z-30 h-full w-full scale-110 blur-2xl"
+            />
+          )}
+          <MemoryImage
+            src={image}
+            alt={alt}
+            contain={contain}
+            eager
+            className="absolute inset-0 -z-20 h-full w-full"
+          />
+        </>
+      ) : (
+        <div className="hero-glow absolute inset-0 -z-20" />
+      )}
+      <div className={`absolute inset-0 -z-10 ${dim}`} />
+      {children}
+    </section>
+  );
+}
+
+function ChapterLabel({ event }: { event: StoryEvent }) {
+  return (
+    <div className="mb-3 flex items-center gap-3 text-[8px] font-semibold uppercase tracking-[0.26em] text-white/48 sm:mb-5 sm:text-[10px]">
       <span className="text-accent">{event.chapter}</span>
-      <span className="h-px w-8 bg-white/15" />
+      <span className="h-px w-7 bg-white/20" />
       <span>{event.eyebrow}</span>
     </div>
   );
 }
 
-function EventCopy({ event }: { event: StoryEvent }) {
+function EventCopy({
+  event,
+  compact = false,
+}: {
+  event: StoryEvent;
+  compact?: boolean;
+}) {
   return (
-    <div>
-      <ChapterMark event={event} />
+    <div className="max-w-3xl">
+      <ChapterLabel event={event} />
       {event.date && (
-        <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.28em] text-accent/90">
+        <p className="mb-2 text-[9px] uppercase tracking-[0.25em] text-accent sm:mb-4 sm:text-[11px]">
           {event.date}
         </p>
       )}
-      <h2 className="text-[clamp(2.7rem,11vw,6.7rem)] font-light leading-[0.91] tracking-[-0.06em]">
+      <h2
+        className={`${
+          compact
+            ? 'text-[clamp(2.15rem,8.5vw,6rem)]'
+            : 'text-[clamp(2.55rem,11vw,7.5rem)]'
+        } font-light leading-[0.88] tracking-[-0.065em] text-white`}
+      >
         {event.title}
       </h2>
-      <div className="mt-7 max-w-xl space-y-4 text-[15px] leading-7 text-white/57 sm:text-base">
-        {event.text.map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
-        ))}
-      </div>
+      {event.text.length > 0 && (
+        <div className="mt-4 max-w-xl space-y-2 text-[12px] leading-5 text-white/66 sm:mt-7 sm:space-y-3 sm:text-base sm:leading-7">
+          {event.text.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </div>
+      )}
       {event.quote && (
-        <blockquote className="mt-9 max-w-xl border-l border-accent/45 pl-5 font-serif text-2xl italic leading-snug text-[#eee9df] sm:text-3xl">
+        <blockquote className="mt-4 max-w-xl border-l border-accent/55 pl-4 font-serif text-lg italic leading-snug text-white sm:mt-7 sm:text-3xl">
           {event.quote}
         </blockquote>
       )}
@@ -154,75 +203,238 @@ function EventCopy({ event }: { event: StoryEvent }) {
   );
 }
 
-function EditorialEvent({
-  event,
-  reverse = false,
-}: {
-  event: StoryEvent;
-  reverse?: boolean;
-}) {
-  const media = (
-    <div className="group relative overflow-hidden bg-[#151517] shadow-[0_28px_90px_rgb(0_0_0/45%)]">
-      {event.image && (
-        <MemoryImage
-          src={event.image}
-          alt={event.imageAlt ?? ''}
-          contain={event.layout === 'map'}
-          className={`${event.layout === 'map' ? 'aspect-[2.25/1]' : 'aspect-[3/4]'} w-full bg-[#0e0e0f] transition duration-700 group-hover:scale-[1.025]`}
-        />
-      )}
-      {event.layout === 'map' && event.mapUrl && (
-        <span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/85 to-transparent px-5 pb-5 pt-12 text-[10px] uppercase tracking-[0.22em] text-white/80">
-          Открыть место на карте
-          <ChevronRight className="size-4 text-accent" aria-hidden="true" />
-        </span>
-      )}
-    </div>
-  );
+function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
+  const [value, setValue] = useState('');
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  const formatDate = (raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 8);
+    return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)]
+      .filter(Boolean)
+      .join('.');
+  };
+
+  const submit = (event: SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (value === story.access.code) {
+      setError(false);
+      onUnlock();
+      return;
+    }
+    setError(true);
+    setAttempt((current) => current + 1);
+  };
 
   return (
-    <section
-      id={event.id}
-      className="relative px-5 py-24 sm:px-8 lg:px-16 lg:py-36"
+    <motion.section
+      key="gate"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 1.04, filter: 'blur(12px)' }}
+      transition={{ duration: 0.7 }}
+      className="hero-glow relative grid h-[100svh] place-items-center overflow-hidden px-5"
     >
-      <div
-        className={`mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}
+      <div className="absolute left-5 top-6 flex items-center gap-3 text-[9px] uppercase tracking-[0.25em] text-white/35 sm:left-8 sm:top-8">
+        <span className="size-1.5 rounded-full bg-accent shadow-[0_0_16px_var(--accent)]" />
+        Только для нас
+      </div>
+      <motion.form
+        key={attempt}
+        onSubmit={submit}
+        animate={error ? { x: [0, -12, 10, -6, 0] } : undefined}
+        transition={{ duration: 0.42 }}
+        className="w-full max-w-xl text-center"
       >
-        <Reveal>
-          <EventCopy event={event} />
-        </Reveal>
-        <Reveal className="relative">
-          <div className="absolute -inset-7 -z-10 rounded-full bg-accent/7 blur-3xl" />
-          {event.mapUrl ? (
-            <a
-              href={event.mapUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="block overflow-hidden rounded-[1.7rem] border border-white/10 p-2 transition hover:border-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:p-3"
-            >
-              {media}
-            </a>
-          ) : (
-            media
-          )}
-          {event.layout === 'map' && (
-            <div className="mt-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/36">
-              <MapPin className="size-3.5 text-accent" aria-hidden="true" />
-              {event.mediaCaption}
-            </div>
-          )}
-        </Reveal>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent">
+          Пароль
+        </p>
+        <h1 className="mt-5 text-[clamp(2.5rem,11vw,5.5rem)] font-light leading-[0.94] tracking-[-0.06em]">
+          {story.access.prompt}
+        </h1>
+        <label htmlFor="story-code" className="sr-only">
+          Дата знакомства
+        </label>
+        <input
+          id="story-code"
+          value={value}
+          onChange={(event) => {
+            setValue(formatDate(event.target.value));
+            setError(false);
+          }}
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={10}
+          placeholder={story.access.hint}
+          className="mt-9 h-16 w-full border-x-0 border-b border-t-0 border-white/18 bg-transparent px-2 text-center text-3xl font-light tracking-[0.16em] text-white outline-none transition placeholder:text-white/18 focus:border-accent sm:h-20 sm:text-5xl"
+        />
+        <p
+          aria-live="polite"
+          className={`mt-4 min-h-5 text-xs transition ${error ? 'text-[#d8a08f]' : 'text-white/28'}`}
+        >
+          {error ? story.access.error : 'Та самая дата, с которой всё началось'}
+        </p>
+        <button
+          type="submit"
+          className="mx-auto mt-7 flex h-13 items-center gap-4 rounded-full bg-white px-7 text-sm font-medium text-black transition hover:bg-[#ece7dc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          {story.access.button}
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </button>
+      </motion.form>
+    </motion.section>
+  );
+}
+
+function CoverSlide({ onStart }: { onStart: () => void }) {
+  return (
+    <section className="hero-glow relative flex h-full items-end overflow-hidden px-5 pb-20 pt-20 sm:px-10 sm:pb-24 lg:items-center lg:px-20">
+      <motion.div
+        aria-hidden="true"
+        className="absolute -right-24 top-[15%] size-80 rounded-full border border-white/8"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 42, repeat: Infinity, ease: 'linear' }}
+      />
+      <div className="mx-auto grid w-full max-w-7xl gap-8 lg:grid-cols-[1fr_0.68fr] lg:items-end">
+        <div>
+          <p className="mb-6 text-[9px] uppercase tracking-[0.36em] text-white/45 sm:text-[11px]">
+            {story.hero.since}
+          </p>
+          <h1 className="text-[clamp(3.5rem,18vw,10rem)] font-light leading-[0.78] tracking-[-0.08em]">
+            {story.people.first.toUpperCase()}
+            <span className="block font-serif italic text-accent">
+              &amp; {story.people.second.toUpperCase()}
+            </span>
+          </h1>
+        </div>
+        <div className="border-l border-white/14 pl-5 lg:pl-8">
+          <p className="max-w-sm text-sm leading-6 text-white/58 sm:text-base sm:leading-7">
+            {story.hero.lead}
+          </p>
+          <button
+            type="button"
+            onClick={onStart}
+            className="mt-6 flex h-13 w-full items-center justify-between rounded-full bg-white px-6 text-sm font-medium text-black transition hover:bg-[#ece7dc] sm:w-72"
+          >
+            {story.hero.button}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </section>
   );
 }
 
-function AutoSlideshow({
+function BeginningSlide() {
+  const [secretOpen, setSecretOpen] = useState(false);
+
+  return (
+    <section className="relative isolate h-full overflow-hidden">
+      <video
+        src={story.intro.video}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        className="absolute inset-0 -z-20 h-full w-full object-cover"
+        aria-label={story.intro.videoAlt}
+      >
+        <track
+          kind="captions"
+          src="/captions/daivinchik.vtt"
+          srcLang="ru"
+          label="Русские субтитры"
+          default
+        />
+      </video>
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black via-black/72 to-black/28" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/68 via-transparent to-black/22" />
+      <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
+        <div className="max-w-2xl">
+          <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
+            {story.intro.chapter} · {story.intro.date}
+          </p>
+          <h2 className="text-[clamp(2.7rem,11vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
+            {story.intro.title}
+          </h2>
+          <p className="mt-4 max-w-lg text-[12px] leading-5 text-white/68 sm:mt-7 sm:text-base sm:leading-7">
+            {story.intro.text}
+          </p>
+          <blockquote className="mt-4 border-l border-accent/55 pl-4 font-serif text-lg italic text-white sm:mt-7 sm:text-3xl">
+            {story.intro.after}
+          </blockquote>
+          <button
+            type="button"
+            onClick={() => setSecretOpen((open) => !open)}
+            className="mt-4 flex items-center gap-2 text-[8px] uppercase tracking-[0.22em] text-white/34 transition hover:text-accent sm:mt-7"
+          >
+            <Sparkles className="size-3" aria-hidden="true" />
+            Секрет первой недели
+          </button>
+          <AnimatePresence>
+            {secretOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                className="absolute inset-x-5 bottom-24 z-20 max-w-xl rounded-2xl border border-accent/25 bg-black/88 p-4 text-xs leading-5 text-white/68 backdrop-blur-xl sm:inset-x-auto sm:bottom-28 sm:p-5"
+              >
+                {story.intro.secret.text}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FirstMeetingSlide() {
+  const event = eventById('first-meeting');
+
+  return (
+    <section className="hero-glow h-full overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 sm:pt-20 lg:px-20">
+      <div className="mx-auto grid h-full max-w-7xl gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-14">
+        <EventCopy event={event} compact />
+        {event.mapUrl ? (
+          <a
+            href={event.mapUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="group relative block h-[28svh] min-h-44 overflow-hidden rounded-2xl border border-white/12 bg-black transition hover:border-accent/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:h-[38svh] lg:h-[56svh]"
+          >
+            <MemoryImage
+              src={event.image ?? ''}
+              alt={event.imageAlt ?? ''}
+              contain
+              eager
+              className="h-full w-full transition duration-700 group-hover:scale-[1.025]"
+            />
+            <span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/90 to-transparent px-4 pb-4 pt-12 text-[9px] uppercase tracking-[0.2em] text-white/82">
+              <span className="flex items-center gap-2">
+                <MapPin className="size-3.5 text-accent" aria-hidden="true" />
+                Открыть место на карте
+              </span>
+              <ChevronRight className="size-4 text-accent" aria-hidden="true" />
+            </span>
+          </a>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function AutoPhotoSlide({
   images,
-  label,
+  eyebrow,
+  title,
+  text,
 }: {
   images: readonly GalleryImage[];
-  label: string;
+  eyebrow: string;
+  title: string;
+  text?: string;
 }) {
   const [index, setIndex] = useState(0);
   const reduceMotion = useReducedMotion();
@@ -230,8 +442,8 @@ function AutoSlideshow({
   useEffect(() => {
     if (reduceMotion || images.length < 2) return;
     const timer = window.setInterval(
-      () => setIndex((value) => (value + 1) % images.length),
-      3600,
+      () => setIndex((current) => (current + 1) % images.length),
+      3300,
     );
     return () => window.clearInterval(timer);
   }, [images.length, reduceMotion]);
@@ -239,219 +451,220 @@ function AutoSlideshow({
   const active = images[index];
 
   return (
-    <div
-      aria-label={label}
-      className="relative -mx-5 h-[62svh] min-h-[480px] overflow-hidden bg-black sm:-mx-8 sm:h-[72svh] lg:-mx-16"
-    >
+    <section className="relative isolate h-full overflow-hidden bg-black">
       <AnimatePresence mode="popLayout" initial={false}>
-        <motion.figure
+        <motion.div
           key={active.src}
-          initial={{ opacity: 0, x: reduceMotion ? 0 : '4%' }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: reduceMotion ? 0 : '-3%' }}
-          transition={{
-            duration: reduceMotion ? 0 : 1.05,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="absolute inset-0"
+          initial={{ opacity: 0, scale: reduceMotion ? 1 : 1.035 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 1 }}
+          className="absolute inset-0 -z-20"
         >
           <MemoryImage
             src={active.src}
             alt={active.alt}
+            eager
             className="h-full w-full"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-black/18" />
-        </motion.figure>
+        </motion.div>
       </AnimatePresence>
-      <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center gap-2">
+      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/78 via-black/8 to-black/34" />
+      <div className="flex h-full items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
+        <div className="max-w-3xl">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
+            {eyebrow}
+          </p>
+          <h2 className="mt-3 text-[clamp(2.8rem,12vw,7.5rem)] font-light leading-[0.87] tracking-[-0.07em]">
+            {title}
+          </h2>
+          {text && (
+            <p className="mt-4 max-w-lg text-xs leading-5 text-white/66 sm:mt-6 sm:text-base sm:leading-7">
+              {text}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="absolute inset-x-0 bottom-16 flex justify-center gap-1.5 sm:bottom-20">
         {images.map((image, dotIndex) => (
           <button
             key={image.src}
             type="button"
             onClick={() => setIndex(dotIndex)}
-            className={`h-1 rounded-full transition-all ${dotIndex === index ? 'w-8 bg-accent' : 'w-3 bg-white/35 hover:bg-white/65'}`}
             aria-label={`Показать фотографию ${dotIndex + 1}`}
+            className={`h-1 rounded-full transition-all ${
+              dotIndex === index ? 'w-7 bg-accent' : 'w-2.5 bg-white/42'
+            }`}
           />
         ))}
       </div>
-    </div>
-  );
-}
-
-function FullscreenPhotoEvent({ event }: { event: StoryEvent }) {
-  return (
-    <section
-      id={event.id}
-      className="relative isolate min-h-[100svh] overflow-hidden"
-    >
-      {event.image && (
-        <>
-          <MemoryImage
-            src={event.image}
-            alt=""
-            className="absolute inset-0 -z-20 h-full w-full scale-110 blur-xl"
-          />
-          <MemoryImage
-            src={event.image}
-            alt={event.imageAlt ?? ''}
-            contain
-            className="absolute inset-0 -z-10 h-full w-full bg-black/20"
-          />
-        </>
-      )}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black via-black/20 to-black/35" />
-      <div className="mx-auto flex min-h-[100svh] max-w-7xl items-end px-5 pb-14 pt-28 sm:px-8 lg:px-16 lg:pb-20">
-        <Reveal className="max-w-3xl">
-          <ChapterMark event={event} />
-          {event.date && (
-            <p className="mb-4 text-[11px] tracking-[0.28em] text-accent">
-              {event.date}
-            </p>
-          )}
-          <h2 className="text-[clamp(3.1rem,12vw,8.4rem)] font-light leading-[0.87] tracking-[-0.07em] text-white">
-            {event.title}
-          </h2>
-          <p className="mt-7 max-w-xl text-[15px] leading-7 text-white/65 sm:text-base">
-            {event.text[0]}
-          </p>
-        </Reveal>
-      </div>
     </section>
   );
 }
 
-function ChapterTransition({
-  chapter,
-  label,
+function CinematicEventSlide({
+  event,
+  contain = false,
 }: {
-  chapter: string;
-  label: string;
+  event: StoryEvent;
+  contain?: boolean;
 }) {
-  const reduceMotion = useReducedMotion();
-
   return (
-    <div className="relative grid min-h-52 place-items-center overflow-hidden border-y border-white/5 px-5">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgb(213_164_95/7%),transparent_58%)]" />
-      <motion.div
-        initial={{ opacity: 0, y: reduceMotion ? 0 : 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.7 }}
-        transition={{ duration: reduceMotion ? 0 : 0.8 }}
-        className="relative flex items-center gap-5"
-      >
-        <span className="font-serif text-5xl italic text-accent/75">
-          {chapter}
-        </span>
-        <motion.span
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: reduceMotion ? 0 : 0.9, delay: 0.15 }}
-          className="h-px w-12 origin-left bg-white/25 sm:w-24"
-        />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/38">
-          {label}
-        </span>
-      </motion.div>
-    </div>
-  );
-}
-
-function BackgroundEvent({ event }: { event: StoryEvent }) {
-  return (
-    <section
-      id={event.id}
-      className="relative isolate min-h-[92svh] overflow-hidden"
-    >
-      {event.image ? (
-        <MemoryImage
-          src={event.image}
-          alt={event.imageAlt ?? ''}
-          className="absolute inset-0 -z-20 h-full w-full"
-        />
-      ) : (
-        <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_80%_25%,rgb(213_164_95/12%),transparent_38%),#09090a]" />
-      )}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black via-black/74 to-black/28" />
-      <div className="mx-auto flex min-h-[92svh] max-w-7xl items-end px-5 pb-16 pt-28 sm:px-8 lg:px-16 lg:pb-24">
-        <Reveal className="max-w-3xl">
-          <EventCopy event={event} />
-        </Reveal>
+    <Background image={event.image} alt={event.imageAlt} contain={contain}>
+      <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
+        <EventCopy event={event} />
       </div>
-    </section>
+    </Background>
   );
 }
 
-function OfficialRelationshipEvent({ event }: { event: StoryEvent }) {
-  const reduceMotion = useReducedMotion();
+function OfficialSlide() {
+  const event = eventById('official');
 
   return (
-    <section
-      id={event.id}
-      className="relative isolate min-h-[100svh] overflow-hidden border-y border-white/7 px-5 py-24 sm:px-8 lg:px-16"
-    >
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_72%_45%,rgb(213_164_95/13%),transparent_38%)]" />
-      <div className="mx-auto grid min-h-[calc(100svh-12rem)] max-w-7xl items-center gap-10 lg:grid-cols-[0.92fr_1.08fr]">
-        <Reveal>
-          <ChapterMark event={event} />
-          <h2 className="max-w-3xl text-[clamp(3rem,11vw,7rem)] font-light leading-[0.89] tracking-[-0.065em]">
-            {event.title}
-          </h2>
-          <div className="mt-8 max-w-xl space-y-4 text-[15px] leading-7 text-white/58 sm:text-base">
-            {event.text.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-          {event.quote && (
-            <p className="mt-8 max-w-xl font-serif text-2xl italic leading-snug text-white sm:text-3xl">
-              {event.quote}
-            </p>
-          )}
-        </Reveal>
+    <section className="hero-glow h-full overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 sm:pt-20 lg:px-20">
+      <div className="mx-auto grid h-full max-w-7xl items-center gap-3 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+        <EventCopy event={event} compact />
         <motion.div
-          initial={{
-            opacity: 0,
-            scale: reduceMotion ? 1 : 0.82,
-            filter: reduceMotion ? 'none' : 'blur(18px)',
-          }}
-          whileInView={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-          viewport={{ once: true, amount: 0.55 }}
-          transition={{
-            duration: reduceMotion ? 0 : 1.15,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="relative text-center"
+          initial={{ opacity: 0, scale: 0.84, filter: 'blur(18px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center"
         >
-          <span className="block text-[clamp(8rem,34vw,25rem)] font-extralight leading-[0.72] tracking-[-0.1em] text-accent">
+          <span className="block text-[clamp(6rem,29vw,22rem)] font-extralight leading-[0.68] tracking-[-0.11em] text-accent">
             22
           </span>
-          <span className="mt-5 block text-[11px] font-semibold uppercase tracking-[0.48em] text-white/62">
+          <span className="mt-3 block text-[9px] font-semibold uppercase tracking-[0.42em] text-white/62 sm:mt-6 sm:text-[11px]">
             октября 2025
           </span>
-          <motion.span
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: reduceMotion ? 0 : 1.1, delay: 0.35 }}
-            className="mx-auto mt-8 block h-px w-40 bg-gradient-to-r from-transparent via-accent to-transparent"
-          />
         </motion.div>
       </div>
     </section>
   );
 }
 
-function RelationshipCounter() {
-  const [now, setNow] = useState(() => new Date());
-
+function LetterDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   useEffect(() => {
-    const interval = window.setInterval(() => setNow(new Date()), 60_000);
-    return () => window.clearInterval(interval);
-  }, []);
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [onClose, open]);
 
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.dialog
+          open
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[90] m-0 grid h-full max-h-none w-full max-w-none place-items-center overflow-y-auto border-0 bg-black/94 p-2 text-inherit backdrop-blur-xl sm:p-5"
+          aria-label={story.letter.alt}
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ y: 24, scale: 0.97 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 12, scale: 0.98 }}
+            onClick={(event) => event.stopPropagation()}
+            className="relative max-h-[96svh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-[#111112] p-2 sm:p-4"
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              className="sticky right-3 top-3 z-10 ml-auto grid size-10 place-items-center rounded-full bg-black/75 text-white/72"
+              aria-label="Закрыть письмо"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+            <MemoryImage
+              src={story.letter.image}
+              alt={story.letter.alt}
+              contain
+              eager
+              className="-mt-10 h-auto w-full rounded-xl bg-white"
+            />
+          </motion.div>
+        </motion.dialog>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function KostyaBirthdaySlide() {
+  const event = eventById('kostya-birthday');
+  const [letterOpen, setLetterOpen] = useState(false);
+  const closeLetter = useCallback(() => setLetterOpen(false), []);
+
+  return (
+    <>
+      <Background image={event.image} alt={event.imageAlt}>
+        <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
+          <div>
+            <EventCopy event={event} />
+            <button
+              type="button"
+              onClick={() => setLetterOpen(true)}
+              className="mt-5 flex h-11 items-center gap-3 rounded-full bg-white px-5 text-xs font-medium text-black transition hover:bg-[#ece7dc] sm:mt-7 sm:h-12 sm:text-sm"
+            >
+              <Expand className="size-4" aria-hidden="true" />
+              Открыть письмо
+            </button>
+          </div>
+        </div>
+      </Background>
+      <LetterDialog open={letterOpen} onClose={closeLetter} />
+    </>
+  );
+}
+
+function LittleThingsSlide() {
+  return (
+    <section className="hero-glow h-full overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 sm:pt-20 lg:px-20">
+      <div className="mx-auto flex h-full max-w-7xl flex-col justify-center">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
+          {story.littleThingsSection.eyebrow}
+        </p>
+        <h2 className="mt-3 text-[clamp(2.7rem,10vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
+          {story.littleThingsSection.title}
+        </h2>
+        <div className="mt-5 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:gap-3">
+          {story.littleThings.map((thing) => (
+            <article
+              key={thing.index}
+              className="rounded-2xl border border-white/9 bg-white/[0.025] p-4 sm:min-h-48 sm:p-5"
+            >
+              <span className="text-[8px] tracking-[0.25em] text-accent">
+                {thing.index}
+              </span>
+              <h3 className="mt-2 font-serif text-xl italic text-white sm:mt-8 sm:text-3xl">
+                {thing.title}
+              </h3>
+              <p className="mt-1.5 text-[11px] leading-4 text-white/48 sm:mt-3 sm:text-sm sm:leading-6">
+                {thing.text}
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CounterSlide() {
   const values = useMemo(() => {
+    const now = new Date();
     const start = new Date(story.dates.relationship);
-    const totalDays = Math.max(
+    const days = Math.max(
       0,
       Math.floor((now.getTime() - start.getTime()) / 86_400_000),
     );
@@ -460,195 +673,319 @@ function RelationshipCounter() {
       now.getMonth() -
       start.getMonth();
     if (now.getDate() < start.getDate()) months -= 1;
-    return { totalDays, months: Math.max(0, months) };
-  }, [now]);
+    return { days, months: Math.max(0, months) };
+  }, []);
 
   return (
-    <section className="border-y border-white/7 px-5 py-28 text-center sm:px-8 lg:px-16 lg:py-40">
-      <Reveal className="mx-auto max-w-5xl">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent">
+    <section className="hero-glow grid h-full place-items-center overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
+      <div className="w-full max-w-5xl text-center">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.32em] text-accent">
           {story.counter.eyebrow}
         </p>
-        <h2 className="mt-5 text-4xl font-light tracking-[-0.05em] sm:text-6xl">
+        <h2 className="mt-4 text-3xl font-light tracking-[-0.05em] sm:text-6xl">
           {story.counter.title}
         </h2>
-        <div className="mt-14 grid grid-cols-2 gap-4">
-          <div className="rounded-[1.6rem] border border-white/9 bg-white/[0.025] px-4 py-10">
-            <strong className="block text-[clamp(3rem,15vw,8rem)] font-light leading-none tracking-[-0.08em] text-white">
-              {values.totalDays}
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-12 sm:gap-5">
+          <div className="rounded-3xl border border-white/9 bg-white/[0.025] px-3 py-8 sm:py-12">
+            <strong className="block text-[clamp(3.5rem,16vw,8rem)] font-light leading-none tracking-[-0.08em]">
+              {values.days}
             </strong>
-            <span className="mt-4 block text-[10px] uppercase tracking-[0.26em] text-white/38">
+            <span className="mt-3 block text-[9px] uppercase tracking-[0.25em] text-white/38">
               дней
             </span>
           </div>
-          <div className="rounded-[1.6rem] border border-white/9 bg-white/[0.025] px-4 py-10">
-            <strong className="block text-[clamp(3rem,15vw,8rem)] font-light leading-none tracking-[-0.08em] text-accent">
+          <div className="rounded-3xl border border-white/9 bg-white/[0.025] px-3 py-8 sm:py-12">
+            <strong className="block text-[clamp(3.5rem,16vw,8rem)] font-light leading-none tracking-[-0.08em] text-accent">
               {values.months}
             </strong>
-            <span className="mt-4 block text-[10px] uppercase tracking-[0.26em] text-white/38">
+            <span className="mt-3 block text-[9px] uppercase tracking-[0.25em] text-white/38">
               месяцев
             </span>
           </div>
         </div>
-      </Reveal>
+      </div>
     </section>
   );
 }
 
-function BirthdayLetter() {
-  const event = eventById('kostya-birthday');
-  const [open, setOpen] = useState(false);
+function FinalSlide() {
+  const [answerOpen, setAnswerOpen] = useState(false);
+
+  return (
+    <Background image={story.final.image} alt={story.final.imageAlt} contain>
+      <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
+        <div className="max-w-3xl">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
+            {story.final.eyebrow}
+          </p>
+          <h2 className="mt-3 text-[clamp(2.55rem,10vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
+            {story.final.title}
+          </h2>
+          <div className="mt-4 max-w-2xl space-y-2 text-[11px] leading-4 text-white/68 sm:mt-7 sm:space-y-3 sm:text-base sm:leading-7">
+            {story.final.paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+          <div className="mt-4 flex items-end justify-between gap-4 sm:mt-7">
+            <div>
+              <p className="font-serif text-xl italic text-white sm:text-4xl">
+                {story.final.signature}
+              </p>
+              <p className="mt-1 text-[8px] uppercase tracking-[0.22em] text-accent">
+                {story.final.author}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAnswerOpen((open) => !open)}
+              className="shrink-0 rounded-full border border-white/16 bg-black/30 px-4 py-2 text-[10px] text-white backdrop-blur-md sm:px-5 sm:py-3 sm:text-xs"
+            >
+              {story.final.nextQuestion}
+            </button>
+          </div>
+          <AnimatePresence>
+            {answerOpen && (
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mt-3 font-serif text-2xl italic text-accent sm:text-4xl"
+              >
+                {story.final.nextAnswer}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </Background>
+  );
+}
+
+function renderSlide(index: number, onStart: () => void) {
+  const birthday = eventById('birthday');
+  const october = eventById('october');
+  const disco = eventById('disco');
+  const finalBell = eventById('final-bell');
+
+  switch (slideIds[index]) {
+    case 'cover':
+      return <CoverSlide onStart={onStart} />;
+    case 'beginning':
+      return <BeginningSlide />;
+    case 'first-meeting':
+      return <FirstMeetingSlide />;
+    case 'summer':
+      return (
+        <AutoPhotoSlide
+          images={story.gallery.slice(0, 7)}
+          eyebrow={story.summer.eyebrow}
+          title={story.summer.title}
+          text={story.summer.text}
+        />
+      );
+    case 'birthday':
+      return <CinematicEventSlide event={birthday} />;
+    case 'october':
+      return <CinematicEventSlide event={october} />;
+    case 'official':
+      return <OfficialSlide />;
+    case 'disco':
+      return <CinematicEventSlide event={disco} contain />;
+    case 'closer':
+      return (
+        <AutoPhotoSlide
+          images={story.gallery.slice(3)}
+          eyebrow={story.everyday.eyebrow}
+          title={story.everyday.title}
+          text={story.everyday.text}
+        />
+      );
+    case 'kostya-birthday':
+      return <KostyaBirthdaySlide />;
+    case 'final-bell':
+      return <CinematicEventSlide event={finalBell} contain />;
+    case 'little-things':
+      return <LittleThingsSlide />;
+    case 'counter':
+      return <CounterSlide />;
+    case 'final':
+      return <FinalSlide />;
+    default:
+      return null;
+  }
+}
+
+function Presentation({
+  current,
+  direction,
+  goTo,
+}: {
+  current: number;
+  direction: number;
+  goTo: (target: number) => void;
+}) {
+  const reduceMotion = useReducedMotion();
+  const isCover = current === 0;
+  const isLast = current === slideIds.length - 1;
 
   useEffect(() => {
-    if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (document.querySelector('dialog[open]')) return;
+      if (event.key === 'ArrowRight' && current < slideIds.length - 1) {
+        goTo(current + 1);
+      }
+      if (event.key === 'ArrowLeft' && current > 0) {
+        goTo(current - 1);
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open]);
+  }, [current, goTo]);
+
+  const variants = {
+    enter: (move: number) => ({
+      x: reduceMotion ? 0 : move > 0 ? '11%' : '-11%',
+      opacity: 0,
+      scale: reduceMotion ? 1 : 0.975,
+      filter: reduceMotion ? 'none' : 'blur(12px)',
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      filter: 'blur(0px)',
+    },
+    exit: (move: number) => ({
+      x: reduceMotion ? 0 : move > 0 ? '-8%' : '8%',
+      opacity: 0,
+      scale: reduceMotion ? 1 : 1.015,
+      filter: reduceMotion ? 'none' : 'blur(9px)',
+    }),
+  };
 
   return (
-    <>
-      <section
-        id={event.id}
-        className="relative isolate min-h-[100svh] overflow-hidden"
-      >
-        {event.image && (
-          <MemoryImage
-            src={event.image}
-            alt={event.imageAlt ?? ''}
-            className="absolute inset-0 -z-20 h-full w-full"
-          />
-        )}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black via-black/68 to-black/22" />
-        <div className="mx-auto flex min-h-[100svh] max-w-7xl items-end px-5 pb-16 pt-28 sm:px-8 lg:px-16 lg:pb-24">
-          <Reveal className="max-w-2xl">
-            <EventCopy event={event} />
-            <p className="mt-7 font-serif text-xl italic text-accent">
-              {story.letter.quote}
-            </p>
-            <Button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="mt-8 h-12 rounded-full bg-white px-6 text-black shadow-xl hover:bg-[#eee9df]"
-            >
-              <Expand className="size-4" aria-hidden="true" />
-              Открыть письмо
-            </Button>
-          </Reveal>
-        </div>
-      </section>
-
-      <AnimatePresence>
-        {open && (
-          <motion.dialog
-            open
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] m-0 grid h-full max-h-none w-full max-w-none place-items-center overflow-y-auto border-0 bg-black/92 p-2 text-inherit backdrop-blur-lg sm:p-5"
-            aria-label={story.letter.alt}
-            onClick={() => setOpen(false)}
-          >
+    <div className="relative h-[100svh] overflow-hidden bg-background">
+      {!isCover && (
+        <>
+          <div className="fixed inset-x-0 top-0 z-[70] h-0.5 bg-white/8">
             <motion.div
-              initial={{ y: 20, scale: 0.97 }}
-              animate={{ y: 0, scale: 1 }}
-              exit={{ y: 15, scale: 0.98 }}
-              onClick={(event) => event.stopPropagation()}
-              className="relative max-h-[96svh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/10 bg-[#111112] p-2 sm:p-4"
-            >
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="sticky right-3 top-3 z-10 ml-auto grid size-10 place-items-center rounded-full bg-black/70 text-white/70 backdrop-blur hover:text-white"
-                aria-label="Закрыть письмо"
-              >
-                ×
-              </button>
-              <MemoryImage
-                src={story.letter.image}
-                alt={story.letter.alt}
-                contain
-                className="-mt-10 h-auto w-full rounded-xl bg-white"
-              />
-            </motion.div>
-          </motion.dialog>
-        )}
+              className="h-full origin-left bg-accent"
+              animate={{ scaleX: current / (slideIds.length - 1) }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+          <div className="fixed right-5 top-5 z-[70] text-[9px] uppercase tracking-[0.24em] text-white/38 sm:right-8 sm:top-8">
+            {String(current).padStart(2, '0')} /{' '}
+            {String(slideIds.length - 1).padStart(2, '0')}
+          </div>
+        </>
+      )}
+
+      <AnimatePresence initial={false} mode="wait" custom={direction}>
+        <motion.div
+          key={slideIds[current]}
+          custom={direction}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{
+            duration: reduceMotion ? 0 : 0.72,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          drag={isCover ? false : 'x'}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.08}
+          onDragEnd={(_, info) => {
+            if (info.offset.x < -65 && !isLast) goTo(current + 1);
+            if (info.offset.x > 65 && current > 0) goTo(current - 1);
+          }}
+          className="absolute inset-0"
+        >
+          {renderSlide(current, () => goTo(1))}
+        </motion.div>
       </AnimatePresence>
-    </>
+
+      {!isCover && (
+        <nav
+          aria-label="Навигация по истории"
+          className="fixed bottom-[max(0.8rem,env(safe-area-inset-bottom))] right-4 z-[75] flex gap-2 sm:bottom-6 sm:right-8"
+        >
+          <button
+            type="button"
+            onClick={() => goTo(current - 1)}
+            disabled={current === 0}
+            className="grid size-11 place-items-center rounded-full border border-white/14 bg-black/50 text-white/72 backdrop-blur-md transition hover:border-accent/45 hover:text-white disabled:opacity-20 sm:size-12"
+            aria-label="Предыдущая глава"
+          >
+            <ChevronLeft className="size-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => goTo(current + 1)}
+            disabled={isLast}
+            className="grid size-11 place-items-center rounded-full bg-white text-black transition hover:bg-[#ece7dc] disabled:opacity-20 sm:size-12"
+            aria-label="Следующая глава"
+          >
+            <ChevronRight className="size-5" aria-hidden="true" />
+          </button>
+        </nav>
+      )}
+    </div>
   );
 }
 
 export function StoryExperience() {
-  const storyStartRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [started, setStarted] = useState(false);
-  const [secretOpen, setSecretOpen] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [audioPlaying, setAudioPlaying] = useState(false);
-  const [activeTrackKey, setActiveTrackKey] = useState<'intro' | 'disco'>(
-    'intro',
-  );
-  const [nextOpen, setNextOpen] = useState(false);
-  const reduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 28,
-    restDelta: 0.001,
-  });
+  const [muted, setMuted] = useState(false);
+
+  const activeTrackKey = current >= DISCO_SLIDE_INDEX ? 'disco' : 'intro';
   const activeTrack = story.soundtrack[activeTrackKey];
   const hasSoundtrack = Boolean(
     story.soundtrack.intro.file || story.soundtrack.disco.file,
   );
+  const previousTrack = useRef(activeTrackKey);
 
-  useEffect(() => {
-    const updateTrack = () => {
-      const discoSection = document.getElementById('disco');
-      if (!discoSection) return;
-      const switchPoint = discoSection.offsetTop - window.innerHeight * 0.58;
-      setActiveTrackKey(window.scrollY >= switchPoint ? 'disco' : 'intro');
-    };
-    updateTrack();
-    window.addEventListener('scroll', updateTrack, { passive: true });
-    window.addEventListener('resize', updateTrack);
-    return () => {
-      window.removeEventListener('scroll', updateTrack);
-      window.removeEventListener('resize', updateTrack);
-    };
-  }, []);
+  const goTo = useCallback(
+    (target: number) => {
+      const bounded = Math.max(0, Math.min(target, slideIds.length - 1));
+      if (bounded === current) return;
+      setDirection(bounded > current ? 1 : -1);
+      setCurrent(bounded);
+    },
+    [current],
+  );
 
-  useEffect(() => {
-    if (!started || !activeTrack.file) return;
+  const unlock = () => {
+    setUnlocked(true);
     const audio = audioRef.current;
-    if (!audio) return;
-    audio.load();
-    const timeout = window.setTimeout(
-      () => playWithFade(audio, setAudioPlaying),
-      80,
-    );
-    return () => window.clearTimeout(timeout);
-  }, [activeTrack.file, started]);
-
-  const startStory = () => {
-    setStarted(true);
-    storyStartRef.current?.scrollIntoView({
-      behavior: reduceMotion ? 'auto' : 'smooth',
-      block: 'start',
-    });
-    window.setTimeout(
-      () => void videoRef.current?.play().catch(() => undefined),
-      reduceMotion ? 0 : 650,
-    );
+    if (audio && story.soundtrack.intro.file) {
+      playWithFade(audio, setAudioPlaying);
+    }
   };
+
+  useEffect(() => {
+    if (!unlocked || previousTrack.current === activeTrackKey) return;
+    previousTrack.current = activeTrackKey;
+    const audio = audioRef.current;
+    if (!audio || !activeTrack.file) return;
+    audio.load();
+    const timer = window.setTimeout(
+      () => playWithFade(audio, setAudioPlaying),
+      60,
+    );
+    return () => window.clearTimeout(timer);
+  }, [activeTrack.file, activeTrackKey, unlocked]);
 
   const toggleAudio = () => {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
-      void audio.play().then(() => setAudioPlaying(true));
+      playWithFade(audio, setAudioPlaying);
     } else {
       audio.pause();
       setAudioPlaying(false);
@@ -662,27 +999,14 @@ export function StoryExperience() {
     setMuted(audio.muted);
   };
 
-  const firstMeeting = eventById('first-meeting');
-  const birthday = eventById('birthday');
-  const october = eventById('october');
-  const official = eventById('official');
-  const disco = eventById('disco');
-  const finalBell = eventById('final-bell');
-
   return (
-    <main className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <motion.div
-        className="fixed inset-x-0 top-0 z-[60] h-[2px] origin-left bg-accent"
-        style={{ scaleX: smoothProgress }}
-      />
-
+    <main className="h-[100svh] overflow-hidden bg-background text-foreground">
       {hasSoundtrack && (
         <audio
           ref={audioRef}
           src={activeTrack.file ?? undefined}
           preload="auto"
           loop
-          onEnded={() => setAudioPlaying(false)}
         >
           <track
             kind="captions"
@@ -693,330 +1017,51 @@ export function StoryExperience() {
         </audio>
       )}
 
-      <section className="relative isolate flex min-h-[100svh] items-end overflow-hidden px-5 pb-8 pt-24 sm:px-8 sm:pb-10 lg:items-center lg:px-16">
-        <div className="hero-glow absolute inset-0 -z-20" />
-        <motion.div
-          aria-hidden="true"
-          className="absolute -right-24 top-[18%] -z-10 h-80 w-80 rounded-full border border-white/8"
-          animate={reduceMotion ? undefined : { rotate: 360 }}
-          transition={{ duration: 40, ease: 'linear', repeat: Infinity }}
-        />
-        <div className="mx-auto grid w-full max-w-7xl gap-16 lg:grid-cols-[1fr_0.8fr] lg:items-end">
-          <div>
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.15 }}
-              className="mb-8 text-[11px] font-medium uppercase tracking-[0.38em] text-white/48"
-            >
-              {story.hero.since}
-            </motion.p>
-            <motion.h1
-              initial={{ opacity: 0, filter: 'blur(12px)' }}
-              animate={{ opacity: 1, filter: 'blur(0px)' }}
-              transition={{ duration: 1.4, delay: 0.35 }}
-              className="max-w-5xl text-[clamp(3.5rem,17vw,9rem)] font-light leading-[0.79] tracking-[-0.075em] text-white"
-            >
-              {story.people.first.toUpperCase()}
-              <span className="block font-serif italic text-accent">
-                &amp; {story.people.second.toUpperCase()}
-              </span>
-            </motion.h1>
-          </div>
+      <AnimatePresence mode="wait">
+        {unlocked ? (
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.1 }}
-            className="border-l border-white/12 pl-5 lg:mb-2 lg:pl-8"
+            key="presentation"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="h-full"
           >
-            <p className="mb-6 max-w-sm text-base leading-relaxed text-white/56">
-              {story.hero.lead}
-            </p>
-            <Button
-              type="button"
-              onClick={startStory}
-              className="h-14 w-full justify-between rounded-full border border-white/18 bg-white px-6 text-[13px] font-medium text-black hover:bg-[#eee9df] sm:w-auto sm:min-w-72"
-            >
-              {started ? 'Продолжить историю' : story.hero.button}
-              <ArrowDown className="size-4" aria-hidden="true" />
-            </Button>
+            <Presentation current={current} direction={direction} goTo={goTo} />
           </motion.div>
-        </div>
-        <div className="absolute left-5 top-7 flex items-center gap-3 text-[10px] uppercase tracking-[0.24em] text-white/38 sm:left-8 lg:left-16">
-          <span className="inline-block size-1.5 rounded-full bg-accent shadow-[0_0_18px_var(--accent)]" />
-          {story.hero.kicker}
-        </div>
-      </section>
+        ) : (
+          <PasswordGate onUnlock={unlock} />
+        )}
+      </AnimatePresence>
 
-      <section
-        ref={storyStartRef}
-        id="story-start"
-        className="relative isolate min-h-[100svh] scroll-mt-0 overflow-hidden border-t border-white/7"
-      >
-        <video
-          ref={videoRef}
-          src={story.intro.video}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          className="absolute inset-0 -z-20 h-full w-full object-cover"
-          aria-label={story.intro.videoAlt}
-        >
-          <track
-            kind="captions"
-            src="/captions/daivinchik.vtt"
-            srcLang="ru"
-            label="Русские субтитры"
-            default
-          />
-        </video>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black via-black/74 to-black/32" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/72 via-transparent to-black/28" />
-        <div className="mx-auto flex min-h-[100svh] max-w-7xl items-end px-5 pb-16 pt-28 sm:px-8 lg:px-16 lg:pb-24">
-          <div>
-            <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.34em] text-accent">
-              {story.intro.chapter} · {story.intro.date}
-            </p>
-            <h2 className="max-w-xl text-5xl font-light leading-[0.96] tracking-[-0.055em] sm:text-7xl">
-              {story.intro.title}
-            </h2>
-            <p className="mt-7 max-w-lg text-[15px] leading-7 text-white/68 sm:text-base">
-              {story.intro.text}
-            </p>
-            <blockquote className="mt-10 border-l border-accent/50 pl-5 font-serif text-2xl italic leading-snug text-[#eee9df] sm:text-3xl">
-              {story.intro.after}
-            </blockquote>
-            <button
-              type="button"
-              onClick={() => setSecretOpen((value) => !value)}
-              className="mt-9 flex items-center gap-2 text-[9px] uppercase tracking-[0.24em] text-white/24 transition hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              <Sparkles className="size-3" aria-hidden="true" />
-              {secretOpen ? 'Закрыть секрет' : 'Открыть секрет первой недели'}
-            </button>
-            <AnimatePresence>
-              {secretOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-4 rounded-2xl border border-accent/20 bg-accent/[0.045] p-5">
-                    <p className="text-[9px] font-semibold tracking-[0.26em] text-accent">
-                      {story.intro.secret.label}
-                    </p>
-                    <p className="mt-3 text-sm leading-6 text-white/55">
-                      {story.intro.secret.text}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </section>
-
-      <ChapterTransition chapter="02" label="Первая встреча" />
-      <EditorialEvent event={firstMeeting} />
-
-      <section className="overflow-hidden px-5 py-24 sm:px-8 lg:px-16 lg:py-36">
-        <Reveal className="mx-auto max-w-7xl">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent">
-            {story.summer.eyebrow}
-          </p>
-          <h2 className="mt-5 max-w-4xl text-[clamp(2.9rem,11vw,7rem)] font-light leading-[0.91] tracking-[-0.065em]">
-            {story.summer.title}
-          </h2>
-          <p className="mt-7 max-w-xl text-[15px] leading-7 text-white/55 sm:text-base">
-            {story.summer.text}
-          </p>
-        </Reveal>
-        <div className="mx-auto mt-12 max-w-7xl">
-          <AutoSlideshow
-            images={story.gallery.slice(0, 6)}
-            label={story.summer.galleryLabel}
-          />
-        </div>
-      </section>
-
-      <ChapterTransition chapter="03" label="Твой день рождения" />
-      <BackgroundEvent event={birthday} />
-      <ChapterTransition chapter="04" label="Октябрь" />
-      <BackgroundEvent event={october} />
-      <ChapterTransition chapter="05" label="22 октября" />
-      <OfficialRelationshipEvent event={official} />
-      <ChapterTransition chapter="06" label="Первый медленный танец" />
-      <FullscreenPhotoEvent event={disco} />
-
-      <ChapterTransition chapter="07" label="Сближение" />
-      <section className="overflow-hidden px-5 py-24 sm:px-8 lg:px-16 lg:py-36">
-        <Reveal className="mx-auto max-w-7xl">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent">
-            {story.everyday.chapter} · {story.everyday.eyebrow}
-          </p>
-          <h2 className="mt-5 max-w-4xl text-[clamp(3rem,12vw,7.5rem)] font-light leading-[0.89] tracking-[-0.065em]">
-            {story.everyday.title}
-          </h2>
-          <p className="mt-7 max-w-xl text-[15px] leading-7 text-white/55 sm:text-base">
-            {story.everyday.text}
-          </p>
-        </Reveal>
-        <div className="mx-auto mt-12 max-w-7xl">
-          <AutoSlideshow
-            images={story.gallery.slice(4)}
-            label={story.everyday.galleryLabel}
-          />
-        </div>
-      </section>
-
-      <ChapterTransition chapter="08" label="Мой день рождения" />
-      <BirthdayLetter />
-      <ChapterTransition chapter="09" label="Твой последний звонок" />
-      <FullscreenPhotoEvent event={finalBell} />
-
-      <section className="px-5 py-24 sm:px-8 lg:px-16 lg:py-36">
-        <Reveal className="mx-auto max-w-7xl">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent">
-            {story.littleThingsSection.eyebrow}
-          </p>
-          <h2 className="mt-5 max-w-4xl text-[clamp(3rem,12vw,7.5rem)] font-light leading-[0.89] tracking-[-0.065em]">
-            {story.littleThingsSection.title}
-          </h2>
-          <div className="mt-14 grid gap-3 sm:grid-cols-3">
-            {story.littleThings.map((thing) => (
-              <article
-                key={thing.index}
-                className="group min-h-56 rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-6 transition hover:border-accent/30 hover:bg-accent/[0.035]"
-              >
-                <span className="text-[10px] tracking-[0.25em] text-accent">
-                  {thing.index}
-                </span>
-                <h3 className="mt-12 font-serif text-3xl italic text-white">
-                  {thing.title}
-                </h3>
-                <p className="mt-4 text-sm leading-6 text-white/47">
-                  {thing.text}
-                </p>
-              </article>
-            ))}
-          </div>
-        </Reveal>
-      </section>
-
-      <RelationshipCounter />
-
-      <section className="relative isolate min-h-[100svh] overflow-hidden px-5 py-24 sm:px-8 lg:px-16 lg:py-36">
-        <div className="absolute inset-0 -z-20 opacity-18">
-          <MemoryImage
-            src={story.final.image}
-            alt=""
-            className="h-full w-full scale-110 blur-2xl"
-          />
-        </div>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-background/90 to-black" />
-        <div className="mx-auto max-w-6xl">
-          <Reveal>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent">
-              {story.final.eyebrow}
-            </p>
-            <h2 className="mt-6 max-w-5xl text-[clamp(3.2rem,13vw,8.7rem)] font-light leading-[0.87] tracking-[-0.07em]">
-              {story.final.title}
-            </h2>
-          </Reveal>
-          <div className="mt-14 grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-            <Reveal>
-              <div className="overflow-hidden rounded-[1.7rem] border border-white/10 bg-black p-2">
-                <MemoryImage
-                  src={story.final.image}
-                  alt={story.final.imageAlt}
-                  contain
-                  className="aspect-[4/3] w-full rounded-[1.25rem]"
-                />
-              </div>
-            </Reveal>
-            <Reveal className="space-y-5 text-lg leading-8 text-white/66 sm:text-xl sm:leading-9">
-              {story.final.paragraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-              <div className="pt-7">
-                <p className="font-serif text-3xl italic text-white sm:text-4xl">
-                  {story.final.signature}
-                </p>
-                <p className="mt-3 text-xs uppercase tracking-[0.24em] text-accent">
-                  {story.final.author}
-                </p>
-              </div>
-              <Button
-                type="button"
-                onClick={() => setNextOpen((value) => !value)}
-                variant="outline"
-                className="mt-8 h-12 rounded-full border-white/14 bg-transparent px-6 text-white hover:bg-white/8"
-              >
-                {story.final.nextQuestion}
-                <ChevronRight className="size-4" aria-hidden="true" />
-              </Button>
-              <AnimatePresence>
-                {nextOpen && (
-                  <motion.p
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="font-serif text-4xl italic text-accent sm:text-5xl"
-                  >
-                    {story.final.nextAnswer}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      <footer className="flex items-center justify-between border-t border-white/7 px-5 py-7 text-[9px] uppercase tracking-[0.22em] text-white/27 sm:px-8 lg:px-16">
-        <span>{story.footer.timeline}</span>
-        <span>{story.footer.note}</span>
-      </footer>
-
-      {hasSoundtrack && activeTrack.file && started && (
-        <div className="fixed left-3 top-4 z-40 flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-2xl border border-white/12 bg-black/72 p-2 pr-3 shadow-2xl backdrop-blur-md sm:left-5 sm:top-5">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/14 text-accent">
-            <Music2 className="size-4" aria-hidden="true" />
+      {unlocked && hasSoundtrack && activeTrack.file && (
+        <div className="fixed left-3 top-3 z-[80] flex items-center gap-1 rounded-full border border-white/12 bg-black/60 p-1 backdrop-blur-md sm:left-5 sm:top-5">
+          <span className="grid size-8 place-items-center rounded-full text-accent">
+            <Music2 className="size-3.5" aria-hidden="true" />
           </span>
-          <div className="min-w-0 pr-1">
-            <p className="truncate text-xs font-medium text-white">
-              {activeTrack.title}
-            </p>
-            <p className="truncate text-[9px] uppercase tracking-[0.14em] text-white/40">
-              {activeTrack.artist}
-            </p>
-          </div>
           <button
             type="button"
             onClick={toggleAudio}
-            className="grid size-9 place-items-center rounded-full text-white/65 hover:bg-white/8 hover:text-white"
+            className="grid size-8 place-items-center rounded-full text-white/68 hover:bg-white/8"
             aria-label={
               audioPlaying ? 'Поставить музыку на паузу' : 'Включить музыку'
             }
           >
             {audioPlaying ? (
-              <Pause className="size-4" />
+              <Pause className="size-3.5" aria-hidden="true" />
             ) : (
-              <Play className="size-4" />
+              <Play className="size-3.5" aria-hidden="true" />
             )}
           </button>
           <button
             type="button"
             onClick={toggleMute}
-            className="grid size-9 place-items-center rounded-full text-white/65 hover:bg-white/8 hover:text-white"
+            className="grid size-8 place-items-center rounded-full text-white/68 hover:bg-white/8"
             aria-label={muted ? 'Включить звук' : 'Выключить звук'}
           >
             {muted ? (
-              <VolumeX className="size-4" />
+              <VolumeX className="size-3.5" aria-hidden="true" />
             ) : (
-              <Volume2 className="size-4" />
+              <Volume2 className="size-3.5" aria-hidden="true" />
             )}
           </button>
         </div>
