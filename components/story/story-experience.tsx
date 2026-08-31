@@ -21,7 +21,6 @@ import {
   Music2,
   Pause,
   Play,
-  Sparkles,
   Volume2,
   VolumeX,
   X,
@@ -313,8 +312,6 @@ function CoverSlide({ onStart }: { onStart: () => void }) {
 }
 
 function BeginningSlide() {
-  const [secretOpen, setSecretOpen] = useState(false);
-
   return (
     <section className="relative isolate h-full overflow-hidden">
       <video
@@ -351,26 +348,6 @@ function BeginningSlide() {
           <blockquote className="mt-4 border-l border-accent/55 pl-4 font-serif text-lg italic text-white sm:mt-7 sm:text-3xl">
             {story.intro.after}
           </blockquote>
-          <button
-            type="button"
-            onClick={() => setSecretOpen((open) => !open)}
-            className="mt-4 flex items-center gap-2 text-[8px] uppercase tracking-[0.22em] text-white/34 transition hover:text-accent sm:mt-7"
-          >
-            <Sparkles className="size-3" aria-hidden="true" />
-            Секрет первой недели
-          </button>
-          <AnimatePresence>
-            {secretOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 6 }}
-                className="absolute inset-x-5 bottom-24 z-20 max-w-xl rounded-2xl border border-accent/25 bg-black/88 p-4 text-xs leading-5 text-white/68 backdrop-blur-xl sm:inset-x-auto sm:bottom-28 sm:p-5"
-              >
-                {story.intro.secret.text}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
     </section>
@@ -639,54 +616,68 @@ function KostyaBirthdaySlide() {
 }
 
 function ComplimentsSlide() {
-  const positions = [
-    { left: '5%', top: '14%', rotate: -7 },
-    { left: '56%', top: '10%', rotate: 5 },
-    { left: '70%', top: '26%', rotate: -4 },
-    { left: '8%', top: '36%', rotate: 6 },
-    { left: '62%', top: '52%', rotate: 4 },
-    { left: '4%', top: '68%', rotate: -5 },
-    { left: '46%', top: '76%', rotate: 6 },
-    { left: '74%', top: '70%', rotate: -6 },
-    { left: '26%', top: '8%', rotate: 3 },
-    { left: '22%', top: '80%', rotate: -3 },
+  const paths = [
+    {
+      x: ['4vw', '40vw', '18vw', '44vw', '4vw'],
+      y: ['10vh', '18vh', '68vh', '48vh', '10vh'],
+    },
+    {
+      x: ['42vw', '14vw', '46vw', '28vw', '42vw'],
+      y: ['12vh', '56vh', '72vh', '22vh', '12vh'],
+    },
+    {
+      x: ['18vw', '44vw', '38vw', '6vw', '18vw'],
+      y: ['72vh', '56vh', '8vh', '34vh', '72vh'],
+    },
+    {
+      x: ['44vw', '38vw', '8vw', '46vw', '44vw'],
+      y: ['68vh', '12vh', '62vh', '38vh', '68vh'],
+    },
+    {
+      x: ['34vw', '6vw', '44vw', '40vw', '34vw'],
+      y: ['8vh', '44vh', '22vh', '74vh', '8vh'],
+    },
+    {
+      x: ['8vw', '42vw', '46vw', '22vw', '8vw'],
+      y: ['48vh', '72vh', '16vh', '24vh', '48vh'],
+    },
+    {
+      x: ['40vw', '46vw', '12vw', '44vw', '40vw'],
+      y: ['74vh', '34vh', '16vh', '58vh', '74vh'],
+    },
+    {
+      x: ['46vw', '28vw', '4vw', '42vw', '46vw'],
+      y: ['32vh', '70vh', '26vh', '10vh', '32vh'],
+    },
   ];
 
   return (
     <section className="hero-glow relative h-full overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
       {story.compliments.map((compliment, index) => {
-        const position = positions[index];
+        const path = paths[index % paths.length];
         return (
           <motion.span
             key={compliment}
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 0, x: path.x[0], y: path.y[0] }}
             animate={{
-              opacity: [0.18, 0.72, 0.35, 0.68],
-              x: [0, index % 2 === 0 ? 12 : -10, 0],
-              y: [0, -12, 8, 0],
-              rotate: [
-                position.rotate,
-                position.rotate + (index % 2 === 0 ? 3 : -3),
-                position.rotate,
-              ],
+              opacity: [0.55, 0.92, 0.72, 0.88, 0.55],
+              x: path.x,
+              y: path.y,
             }}
             transition={{
-              duration: 8 + (index % 4) * 1.7,
-              delay: index * 0.22,
+              duration: 24 + (index % 6) * 2.5,
+              delay: -(index * 2.1),
               repeat: Infinity,
-              ease: 'easeInOut',
+              ease: 'linear',
             }}
-            style={{ left: position.left, top: position.top }}
-            className={`absolute max-w-44 font-serif text-lg italic text-white/55 sm:max-w-none sm:text-2xl ${
-              index > 6 ? 'hidden sm:block' : ''
-            }`}
+            className="pointer-events-none absolute left-0 top-0 max-w-[48vw] rounded-2xl border border-white/10 bg-black/58 px-3 py-1.5 text-center font-serif text-xs italic leading-snug text-white/82 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-sm will-change-transform sm:max-w-sm sm:rounded-full sm:px-4 sm:py-2 sm:text-xl"
           >
             {compliment}
           </motion.span>
         );
       })}
       <div className="relative z-10 mx-auto grid h-full max-w-5xl place-items-center text-center">
-        <div className="rounded-[2rem] bg-black/38 px-5 py-7 backdrop-blur-sm sm:px-12 sm:py-10">
+        <div className="rounded-[2rem] border border-white/8 bg-black/64 px-5 py-7 shadow-2xl backdrop-blur-md sm:px-12 sm:py-10">
           <h2 className="text-[clamp(2.8rem,11vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
             {story.complimentsSection.title}
           </h2>
