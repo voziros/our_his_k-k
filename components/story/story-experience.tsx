@@ -757,7 +757,78 @@ function CounterSlide() {
   );
 }
 
+function HandwrittenSignature({ text }: { text: string }) {
+  const reduceMotion = useReducedMotion();
+  const characters = Array.from(text);
+
+  return (
+    <div className="inline-block" aria-label={text}>
+      <motion.p
+        aria-hidden="true"
+        initial={reduceMotion ? false : 'hidden'}
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: {
+            transition: {
+              delayChildren: (index: number) => 0.3 + index * 0.045,
+            },
+          },
+        }}
+        className="whitespace-nowrap font-serif text-[clamp(1.25rem,6vw,2.8rem)] italic leading-none text-white"
+      >
+        {characters.map((character, index) => (
+          <motion.span
+            key={`${character}-${index}`}
+            variants={{
+              hidden: {
+                opacity: 0,
+                y: 6,
+                rotate: -4,
+                filter: 'blur(2px)',
+              },
+              visible: {
+                opacity: 1,
+                y: 0,
+                rotate: 0,
+                filter: 'blur(0px)',
+              },
+            }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            className="inline-block"
+          >
+            {character === ' ' ? '\u00A0' : character}
+          </motion.span>
+        ))}
+      </motion.p>
+      <svg
+        viewBox="0 0 430 18"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        className="mt-1 h-3 w-full overflow-visible text-accent"
+      >
+        <motion.path
+          d="M4 11C87 2 154 16 229 8C302 0 354 15 426 5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 0.78 }}
+          transition={{
+            delay: reduceMotion ? 0 : 1.55,
+            duration: reduceMotion ? 0 : 1.1,
+            ease: 'easeOut',
+          }}
+        />
+      </svg>
+    </div>
+  );
+}
+
 function FinalSlide() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <Background image={story.final.image} alt={story.final.imageAlt} contain>
       <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
@@ -775,12 +846,15 @@ function FinalSlide() {
           </div>
           <div className="mt-4 sm:mt-7">
             <div>
-              <p className="font-serif text-xl italic text-white sm:text-4xl">
-                {story.final.signature}
-              </p>
-              <p className="mt-1 text-[8px] uppercase tracking-[0.22em] text-accent">
+              <HandwrittenSignature text={story.final.signature} />
+              <motion.p
+                initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: reduceMotion ? 0 : 2.1, duration: 0.5 }}
+                className="mt-1 text-[8px] uppercase tracking-[0.22em] text-accent"
+              >
                 {story.final.author}
-              </p>
+              </motion.p>
             </div>
           </div>
         </div>
