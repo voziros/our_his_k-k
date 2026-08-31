@@ -181,11 +181,6 @@ export const story = {
       rotate: -1.5,
     },
     {
-      src: '/images/gallery/07-panorama.jpg',
-      alt: 'Костя и Ксюша вместе на прогулке',
-      rotate: 0,
-    },
-    {
       src: '/images/gallery/08-park.jpg',
       alt: 'Смешное фото Кости и Ксюши в парке',
       rotate: 1,
