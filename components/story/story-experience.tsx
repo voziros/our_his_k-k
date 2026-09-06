@@ -290,7 +290,7 @@ function CoverSlide({ onStart }: { onStart: () => void }) {
         transition={{ delay: 0.3, duration: 1 }}
         className="pointer-events-none absolute -right-8 top-[10%] font-serif text-[clamp(10rem,38vw,34rem)] italic leading-none text-white"
       >
-        &amp;
+        ♡
       </motion.div>
 
       <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-20 pt-20 sm:px-10 sm:pb-24 lg:items-center lg:px-20">
@@ -304,33 +304,23 @@ function CoverSlide({ onStart }: { onStart: () => void }) {
           }}
           className="max-w-3xl"
         >
-          <div className="mb-5 flex items-center gap-4 text-[9px] font-semibold uppercase tracking-[0.32em] text-accent sm:mb-7 sm:text-[11px]">
-            <span>{story.people.first}</span>
-            <span className="h-px w-8 bg-accent/55" />
-            <span>{story.people.second}</span>
+          <div className="mb-5 text-[9px] font-semibold uppercase tracking-[0.32em] text-accent sm:mb-7 sm:text-[11px]">
+            {story.hero.since}
           </div>
-          <h1 className="text-[clamp(4rem,18vw,11rem)] font-light leading-[0.76] tracking-[-0.085em] text-white">
-            Наша
+          <h1 className="text-[clamp(3.25rem,11vw,7.5rem)] font-light leading-[0.86] tracking-[-0.065em] text-white">
+            Всё началось
             <span className="block font-serif italic text-accent">
-              история.
+              с одного лайка.
             </span>
           </h1>
-          <p className="mt-7 max-w-md text-sm leading-6 text-white/68 sm:text-base sm:leading-7">
-            {story.hero.lead}
-          </p>
-          <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
-            <button
-              type="button"
-              onClick={onStart}
-              className="flex h-13 w-full items-center justify-between rounded-full bg-white px-6 text-sm font-medium text-black transition hover:bg-[#ece7dc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:w-56"
-            >
-              {story.hero.button}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </button>
-            <p className="text-[9px] uppercase tracking-[0.3em] text-white/54 sm:text-[10px]">
-              {story.hero.since}
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={onStart}
+            className="mt-7 flex h-13 w-full items-center justify-between rounded-full bg-white px-6 text-sm font-medium text-black transition hover:bg-[#ece7dc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:w-56"
+          >
+            {story.hero.button}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </button>
         </motion.div>
       </div>
     </section>
