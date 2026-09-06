@@ -46,7 +46,6 @@ const slideIds = [
   'closer',
   'kostya-birthday',
   'final-bell',
-  'compliments',
   'counter',
   'final',
 ] as const;
@@ -615,81 +614,6 @@ function KostyaBirthdaySlide() {
   );
 }
 
-function ComplimentsSlide() {
-  const paths = [
-    {
-      x: ['4vw', '40vw', '18vw', '44vw', '4vw'],
-      y: ['10vh', '18vh', '68vh', '48vh', '10vh'],
-    },
-    {
-      x: ['42vw', '14vw', '46vw', '28vw', '42vw'],
-      y: ['12vh', '56vh', '72vh', '22vh', '12vh'],
-    },
-    {
-      x: ['18vw', '44vw', '38vw', '6vw', '18vw'],
-      y: ['72vh', '56vh', '8vh', '34vh', '72vh'],
-    },
-    {
-      x: ['44vw', '38vw', '8vw', '46vw', '44vw'],
-      y: ['68vh', '12vh', '62vh', '38vh', '68vh'],
-    },
-    {
-      x: ['34vw', '6vw', '44vw', '40vw', '34vw'],
-      y: ['8vh', '44vh', '22vh', '74vh', '8vh'],
-    },
-    {
-      x: ['8vw', '42vw', '46vw', '22vw', '8vw'],
-      y: ['48vh', '72vh', '16vh', '24vh', '48vh'],
-    },
-    {
-      x: ['40vw', '46vw', '12vw', '44vw', '40vw'],
-      y: ['74vh', '34vh', '16vh', '58vh', '74vh'],
-    },
-    {
-      x: ['46vw', '28vw', '4vw', '42vw', '46vw'],
-      y: ['32vh', '70vh', '26vh', '10vh', '32vh'],
-    },
-  ];
-
-  return (
-    <section className="hero-glow relative h-full overflow-hidden px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
-      {story.compliments.map((compliment, index) => {
-        const path = paths[index % paths.length];
-        return (
-          <motion.span
-            key={compliment}
-            initial={{ opacity: 0, x: path.x[0], y: path.y[0] }}
-            animate={{
-              opacity: [0.55, 0.92, 0.72, 0.88, 0.55],
-              x: path.x,
-              y: path.y,
-            }}
-            transition={{
-              duration: 24 + (index % 6) * 2.5,
-              delay: -(index * 2.1),
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-            className="pointer-events-none absolute left-0 top-0 max-w-[48vw] rounded-2xl border border-white/10 bg-black/58 px-3 py-1.5 text-center font-serif text-xs italic leading-snug text-white/82 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-sm will-change-transform sm:max-w-sm sm:rounded-full sm:px-4 sm:py-2 sm:text-xl"
-          >
-            {compliment}
-          </motion.span>
-        );
-      })}
-      <div className="relative z-10 mx-auto grid h-full max-w-5xl place-items-center text-center">
-        <div className="rounded-[2rem] border border-white/8 bg-black/64 px-5 py-7 shadow-2xl backdrop-blur-md sm:px-12 sm:py-10">
-          <h2 className="text-[clamp(2.8rem,11vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
-            {story.complimentsSection.title}
-          </h2>
-          <p className="mx-auto mt-5 max-w-lg font-serif text-lg italic text-accent sm:text-2xl">
-            {story.complimentsSection.text}
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function CounterSlide() {
   const [now, setNow] = useState(() => Date.now());
 
@@ -904,8 +828,6 @@ function renderSlide(index: number, onStart: () => void) {
       return <KostyaBirthdaySlide />;
     case 'final-bell':
       return <CinematicEventSlide event={finalBell} contain />;
-    case 'compliments':
-      return <ComplimentsSlide />;
     case 'counter':
       return <CounterSlide />;
     case 'final':
