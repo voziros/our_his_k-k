@@ -460,6 +460,45 @@ function AutoPhotoSlide({
   );
 }
 
+function VideoMemorySlide({
+  video,
+  title,
+  text,
+}: {
+  video: string;
+  title: string;
+  text?: string;
+}) {
+  return (
+    <section className="relative isolate h-full overflow-hidden bg-black">
+      <video
+        src={video}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+        className="absolute inset-0 -z-20 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/82 via-black/10 to-black/35" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/34 via-transparent to-black/8" />
+      <div className="flex h-full items-end px-5 pb-24 pt-20 sm:px-10 sm:pb-28 lg:px-20">
+        <div className="max-w-3xl">
+          <h2 className="text-[clamp(2.8rem,12vw,7.5rem)] font-light leading-[0.87] tracking-[-0.07em]">
+            {title}
+          </h2>
+          {text && (
+            <p className="mt-4 max-w-lg text-xs leading-5 text-white/72 sm:mt-6 sm:text-base sm:leading-7">
+              {text}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CinematicEventSlide({
   event,
   contain = false,
@@ -896,8 +935,8 @@ function renderSlide(index: number, onStart: () => void) {
       return <CinematicEventSlide event={disco} contain />;
     case 'closer':
       return (
-        <AutoPhotoSlide
-          images={story.gallery.slice(3)}
+        <VideoMemorySlide
+          video={story.everyday.video}
           title={story.everyday.title}
           text={story.everyday.text}
         />

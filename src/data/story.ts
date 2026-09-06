@@ -205,6 +205,7 @@ export const story = {
   everyday: {
     title: 'Сближение.',
     text: 'Мы старались давать друг другу больше любви. Всё ещё стеснялись — но уже знали, что мы вместе.',
+    video: '/videos/slide-8.mp4',
     galleryLabel: 'Совместные фотографии Кости и Ксюши',
   },
   soundtrack: {
@@ -233,8 +234,8 @@ export const story = {
     ],
     signature: 'С днём рождения, Ксюша ❤️',
     author: '— Костя',
-    image: '/images/story/final-bell.jpg',
-    imageAlt: 'Костя и Ксюша вместе на последнем звонке',
+    image: '/images/story/final-slide.jpg',
+    imageAlt: 'Костя и Ксюша вместе',
   },
   footer: {
     timeline: '12.05.2025 — ∞',
