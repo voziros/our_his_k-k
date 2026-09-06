@@ -220,10 +220,6 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
       transition={{ duration: 0.7 }}
       className="hero-glow relative grid h-[100svh] place-items-center overflow-hidden px-5"
     >
-      <div className="absolute left-5 top-6 flex items-center gap-3 text-[9px] uppercase tracking-[0.25em] text-white/35 sm:left-8 sm:top-8">
-        <span className="size-1.5 rounded-full bg-accent shadow-[0_0_16px_var(--accent)]" />
-        Только для нас
-      </div>
       <motion.form
         key={attempt}
         onSubmit={submit}
@@ -231,10 +227,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         transition={{ duration: 0.42 }}
         className="w-full max-w-xl text-center"
       >
-        <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent">
-          Пароль
-        </p>
-        <h1 className="mt-5 text-[clamp(2.5rem,11vw,5.5rem)] font-light leading-[0.94] tracking-[-0.06em]">
+        <h1 className="text-[clamp(2.5rem,11vw,5.5rem)] font-light leading-[0.94] tracking-[-0.06em]">
           {story.access.prompt}
         </h1>
         <label htmlFor="story-code" className="sr-only">
@@ -255,9 +248,9 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         />
         <p
           aria-live="polite"
-          className={`mt-4 min-h-5 text-xs transition ${error ? 'text-[#d8a08f]' : 'text-white/28'}`}
+          className={`mt-4 min-h-5 text-xs transition ${error ? 'text-[#d8a08f]' : 'text-transparent'}`}
         >
-          {error ? story.access.error : 'Та самая дата, с которой всё началось'}
+          {error ? story.access.error : ''}
         </p>
         <button
           type="submit"
@@ -273,38 +266,72 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
 
 function CoverSlide({ onStart }: { onStart: () => void }) {
   return (
-    <section className="hero-glow relative flex h-full items-end overflow-hidden px-5 pb-20 pt-20 sm:px-10 sm:pb-24 lg:items-center lg:px-20">
+    <section className="relative isolate h-full overflow-hidden bg-black">
+      <motion.div
+        initial={{ scale: 1.07, opacity: 0.7 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute inset-0 -z-30"
+      >
+        <MemoryImage
+          src="/images/gallery/04-cheek-kiss.jpg"
+          alt="Костя целует Ксюшу в щёку"
+          eager
+          className="h-full w-full object-[56%_center] sm:object-center"
+        />
+      </motion.div>
+      <div className="absolute inset-0 -z-20 bg-gradient-to-r from-black via-black/72 to-black/14" />
+      <div className="absolute inset-0 -z-20 bg-gradient-to-t from-black/72 via-black/5 to-black/38" />
+
       <motion.div
         aria-hidden="true"
-        className="absolute -right-24 top-[15%] size-80 rounded-full border border-white/8"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 42, repeat: Infinity, ease: 'linear' }}
-      />
-      <div className="mx-auto grid w-full max-w-7xl gap-8 lg:grid-cols-[1fr_0.68fr] lg:items-end">
-        <div>
-          <p className="mb-6 text-[9px] uppercase tracking-[0.36em] text-white/45 sm:text-[11px]">
-            {story.hero.since}
-          </p>
-          <h1 className="text-[clamp(3.5rem,18vw,10rem)] font-light leading-[0.78] tracking-[-0.08em]">
-            {story.people.first.toUpperCase()}
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 0.07, x: 0 }}
+        transition={{ delay: 0.3, duration: 1 }}
+        className="pointer-events-none absolute -right-8 top-[10%] font-serif text-[clamp(10rem,38vw,34rem)] italic leading-none text-white"
+      >
+        &amp;
+      </motion.div>
+
+      <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-20 pt-20 sm:px-10 sm:pb-24 lg:items-center lg:px-20">
+        <motion.div
+          initial={{ opacity: 0, y: 22 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 0.18,
+            duration: 0.85,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="max-w-3xl"
+        >
+          <div className="mb-5 flex items-center gap-4 text-[9px] font-semibold uppercase tracking-[0.32em] text-accent sm:mb-7 sm:text-[11px]">
+            <span>{story.people.first}</span>
+            <span className="h-px w-8 bg-accent/55" />
+            <span>{story.people.second}</span>
+          </div>
+          <h1 className="text-[clamp(4rem,18vw,11rem)] font-light leading-[0.76] tracking-[-0.085em] text-white">
+            Наша
             <span className="block font-serif italic text-accent">
-              &amp; {story.people.second.toUpperCase()}
+              история.
             </span>
           </h1>
-        </div>
-        <div className="border-l border-white/14 pl-5 lg:pl-8">
-          <p className="max-w-sm text-sm leading-6 text-white/58 sm:text-base sm:leading-7">
+          <p className="mt-7 max-w-md text-sm leading-6 text-white/68 sm:text-base sm:leading-7">
             {story.hero.lead}
           </p>
-          <button
-            type="button"
-            onClick={onStart}
-            className="mt-6 flex h-13 w-full items-center justify-between rounded-full bg-white px-6 text-sm font-medium text-black transition hover:bg-[#ece7dc] sm:w-72"
-          >
-            {story.hero.button}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </button>
-        </div>
+          <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
+            <button
+              type="button"
+              onClick={onStart}
+              className="flex h-13 w-full items-center justify-between rounded-full bg-white px-6 text-sm font-medium text-black transition hover:bg-[#ece7dc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:w-56"
+            >
+              {story.hero.button}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+            <p className="text-[9px] uppercase tracking-[0.3em] text-white/54 sm:text-[10px]">
+              {story.hero.since}
+            </p>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
