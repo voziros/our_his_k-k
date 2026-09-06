@@ -681,50 +681,82 @@ function CounterSlide() {
   );
 }
 
-function HandwrittenSignature({ text }: { text: string }) {
+function AnimatedCharacters({
+  text,
+  delay = 0,
+  stagger = 0.02,
+  className = '',
+}: {
+  text: string;
+  delay?: number;
+  stagger?: number;
+  className?: string;
+}) {
   const reduceMotion = useReducedMotion();
-  const characters = Array.from(text);
+  const segments = Array.from(text.matchAll(/\S+|\s+/g), (match) => ({
+    segment: match[0],
+    offset: Array.from(text.slice(0, match.index)).length,
+  }));
 
   return (
-    <div className="inline-block" aria-label={text}>
-      <motion.p
-        aria-hidden="true"
-        initial={reduceMotion ? false : 'hidden'}
-        animate="visible"
-        variants={{
-          hidden: {},
-          visible: {
-            transition: {
-              delayChildren: (index: number) => 0.3 + index * 0.045,
-            },
-          },
-        }}
+    <span className={className}>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">
+        {segments.map(({ segment, offset }) =>
+          /\s+/.test(segment) ? (
+            <span key={`space-${offset}`}>{segment}</span>
+          ) : (
+            <span
+              key={`word-${offset}`}
+              className="inline-block whitespace-nowrap"
+            >
+              {Array.from(segment).map((character, index) => (
+                <motion.span
+                  key={`${character}-${offset + index}`}
+                  initial={
+                    reduceMotion
+                      ? false
+                      : { opacity: 0, y: 6, rotate: -4, filter: 'blur(2px)' }
+                  }
+                  animate={{ opacity: 1, y: 0, rotate: 0, filter: 'blur(0px)' }}
+                  transition={{
+                    delay: reduceMotion
+                      ? 0
+                      : delay + (offset + index) * stagger,
+                    duration: reduceMotion ? 0 : 0.32,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className="inline-block"
+                >
+                  {character}
+                </motion.span>
+              ))}
+            </span>
+          ),
+        )}
+      </span>
+    </span>
+  );
+}
+
+function HandwrittenSignature({
+  text,
+  delay = 0,
+}: {
+  text: string;
+  delay?: number;
+}) {
+  const reduceMotion = useReducedMotion();
+  const underlineDelay = delay + Array.from(text).length * 0.04 + 0.12;
+
+  return (
+    <div className="inline-block">
+      <AnimatedCharacters
+        text={text}
+        delay={delay}
+        stagger={0.04}
         className="whitespace-nowrap font-serif text-[clamp(1.25rem,6vw,2.8rem)] italic leading-none text-white"
-      >
-        {characters.map((character, index) => (
-          <motion.span
-            key={`${character}-${index}`}
-            variants={{
-              hidden: {
-                opacity: 0,
-                y: 6,
-                rotate: -4,
-                filter: 'blur(2px)',
-              },
-              visible: {
-                opacity: 1,
-                y: 0,
-                rotate: 0,
-                filter: 'blur(0px)',
-              },
-            }}
-            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="inline-block"
-          >
-            {character === ' ' ? '\u00A0' : character}
-          </motion.span>
-        ))}
-      </motion.p>
+      />
       <svg
         viewBox="0 0 430 18"
         preserveAspectRatio="none"
@@ -740,7 +772,7 @@ function HandwrittenSignature({ text }: { text: string }) {
           initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 0.78 }}
           transition={{
-            delay: reduceMotion ? 0 : 1.55,
+            delay: reduceMotion ? 0 : underlineDelay,
             duration: reduceMotion ? 0 : 1.1,
             ease: 'easeOut',
           }}
@@ -751,34 +783,80 @@ function HandwrittenSignature({ text }: { text: string }) {
 }
 
 function FinalSlide() {
-  const reduceMotion = useReducedMotion();
+  const eyebrowStagger = 0.04;
+  const titleStagger = 0.028;
+  const paragraphStagger = 0.006;
+  const eyebrowDelay = 0.05;
+  const titleDelay =
+    eyebrowDelay +
+    Array.from(story.final.eyebrow).length * eyebrowStagger +
+    0.15;
+  const paragraphsDelay =
+    titleDelay + Array.from(story.final.title).length * titleStagger + 0.25;
+  const paragraphDelays = story.final.paragraphs.map(
+    (_paragraph, index) =>
+      paragraphsDelay +
+      story.final.paragraphs
+        .slice(0, index)
+        .reduce(
+          (elapsed, paragraph) =>
+            elapsed + Array.from(paragraph).length * paragraphStagger + 0.18,
+          0,
+        ),
+  );
+  const signatureDelay =
+    paragraphsDelay +
+    story.final.paragraphs.reduce(
+      (elapsed, paragraph) =>
+        elapsed + Array.from(paragraph).length * paragraphStagger + 0.18,
+      0,
+    ) +
+    0.08;
+  const authorDelay =
+    signatureDelay + Array.from(story.final.signature).length * 0.04 + 1.35;
 
   return (
     <Background image={story.final.image} alt={story.final.imageAlt} contain>
       <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
         <div className="max-w-3xl">
           <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
-            {story.final.eyebrow}
+            <AnimatedCharacters
+              text={story.final.eyebrow}
+              delay={eyebrowDelay}
+              stagger={eyebrowStagger}
+            />
           </p>
           <h2 className="mt-3 text-[clamp(2.55rem,10vw,7rem)] font-light leading-[0.88] tracking-[-0.065em]">
-            {story.final.title}
+            <AnimatedCharacters
+              text={story.final.title}
+              delay={titleDelay}
+              stagger={titleStagger}
+            />
           </h2>
           <div className="mt-4 max-w-2xl space-y-2 text-[11px] leading-4 text-white/68 sm:mt-7 sm:space-y-3 sm:text-base sm:leading-7">
-            {story.final.paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
+            {story.final.paragraphs.map((paragraph, index) => (
+              <p key={paragraph}>
+                <AnimatedCharacters
+                  text={paragraph}
+                  delay={paragraphDelays[index]}
+                  stagger={paragraphStagger}
+                />
+              </p>
             ))}
           </div>
           <div className="mt-4 sm:mt-7">
             <div>
-              <HandwrittenSignature text={story.final.signature} />
-              <motion.p
-                initial={reduceMotion ? false : { opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: reduceMotion ? 0 : 2.1, duration: 0.5 }}
-                className="mt-1 text-[8px] uppercase tracking-[0.22em] text-accent"
-              >
-                {story.final.author}
-              </motion.p>
+              <HandwrittenSignature
+                text={story.final.signature}
+                delay={signatureDelay}
+              />
+              <p className="mt-1 text-[8px] uppercase tracking-[0.22em] text-accent">
+                <AnimatedCharacters
+                  text={story.final.author}
+                  delay={authorDelay}
+                  stagger={0.06}
+                />
+              </p>
             </div>
           </div>
         </div>
