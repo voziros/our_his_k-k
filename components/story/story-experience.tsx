@@ -812,7 +812,7 @@ function HandwrittenSignature({
         text={text}
         delay={delay}
         stagger={0.04}
-        className="whitespace-nowrap font-serif text-[clamp(1.25rem,6vw,2.8rem)] italic leading-none text-white"
+        className="whitespace-nowrap font-serif text-[clamp(0.85rem,4.3vw,2.8rem)] italic leading-none text-white"
       />
       <svg
         viewBox="0 0 430 18"
@@ -875,7 +875,7 @@ function FinalSlide() {
   return (
     <Background image={story.final.image} alt={story.final.imageAlt} contain>
       <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-20 pt-16 sm:px-10 sm:pb-24 lg:px-20">
-        <div className="max-w-3xl">
+        <div className="w-full min-w-0 max-w-3xl">
           <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-accent">
             <AnimatedCharacters
               text={story.final.eyebrow}
