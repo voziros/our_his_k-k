@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'github-pages',
+    outDir: 'docs',
     emptyOutDir: true,
   },
 });
