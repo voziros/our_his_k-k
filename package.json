@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
+    "build:github": "vite build --config vite.github.config.ts",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint app components/story src",
     "format": "oxfmt"

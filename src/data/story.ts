@@ -19,6 +19,8 @@ export type GalleryImage = {
   position?: string;
 };
 
+import { siteAsset } from '@/src/lib/site-asset';
+
 export const story = {
   access: {
     code: '12.05.2025',
@@ -51,7 +53,7 @@ export const story = {
     date: '12 МАЯ 2025',
     title: 'Всё началось с одного лайка.',
     text: 'Я увидел твоё видео, подумал, что ты очень красивая и милая, и нажал на сердечко. Вечером ты ответила взаимно. Мы сразу словили общий вайб. Ты понравилась мне настолько, что я уже тогда выстраивал план и почему-то знал: ты будешь моей.',
-    video: '/videos/daivinchik.mp4',
+    video: siteAsset('/videos/daivinchik.mp4'),
     videoAlt: 'Видео Ксюши из анкеты, с которого началась история',
     videoLabel: 'Первый кадр',
     videoDuration: '14 сек',
@@ -67,7 +69,7 @@ export const story = {
         'Мы немного погуляли. Я проводил тебя, но не до самого подъезда — тогда ты ещё переживала, что родители узнают обо мне. На прощание ты меня обняла.',
       ],
       quote: '«Нормально ли, что я обняла тебя?»',
-      image: '/images/story/first-meeting-map.png',
+      image: siteAsset('/images/story/first-meeting-map.png'),
       imageAlt: 'Место первой встречи Кости и Ксюши на карте',
       mediaCaption: 'Место, где всё стало настоящим',
       mapUrl: 'https://maps.app.goo.gl/J4i54wBFp2TcJkhx8',
@@ -81,7 +83,7 @@ export const story = {
         'Я купил тебе букет из конфет Raffaello и вечером пришёл поздравлять вместе с твоими подругами.',
         'Подарил букет, ебнул тебе тортом в лицо и смотался. А волновался в тот момент — пиздец.',
       ],
-      video: '/videos/her-birthday.mp4',
+      video: siteAsset('/videos/her-birthday.mp4'),
       layout: 'type',
     },
     {
@@ -94,7 +96,7 @@ export const story = {
         'На следующей прогулке я просто взял твою руку, положил её в свою и пошёл дальше как ни в чём не бывало.',
       ],
       quote: '«Мне кажется, ты ахуел»',
-      image: '/images/story/october-walk.jpg',
+      image: siteAsset('/images/story/october-walk.jpg'),
       imageAlt: 'Костя и Ксюша идут вечером, снятые со спины другом Тиграном',
       layout: 'fullscreen',
     },
@@ -116,7 +118,7 @@ export const story = {
       text: [
         'Прошло совсем немного времени с начала отношений. На той дискотеке был наш первый медленный танец.',
       ],
-      image: '/images/story/slow-dance.jpg',
+      image: siteAsset('/images/story/slow-dance.jpg'),
       imageAlt: 'Костя и Ксюша танцуют медленный танец на дискотеке',
       layout: 'fullscreen',
     },
@@ -128,7 +130,7 @@ export const story = {
         'Ты подарила мне LEGO, и я на мгновение опять почувствовал себя ребёнком. Ещё — коробочку с нашими фотографиями, сладостями и письмом от руки.',
         'Письмо растрогало меня сильнее всего. Его я хочу сохранить здесь целиком — таким, каким ты его сделала.',
       ],
-      image: '/images/story/kostya-birthday.jpg',
+      image: siteAsset('/images/story/kostya-birthday.jpg'),
       imageAlt: 'Ксюша целует Костю, испачканного тортом, в его день рождения',
       layout: 'letter',
     },
@@ -139,7 +141,7 @@ export const story = {
       text: [
         'Год назад в мой последний звонок мы впервые встретились. Теперь мы стоим рядом уже совсем другие.',
       ],
-      image: '/images/story/final-bell.jpg',
+      image: siteAsset('/images/story/final-bell.jpg'),
       imageAlt:
         'Костя и Ксюша целуются на последнем звонке Ксюши, в руках большой букет',
       layout: 'fullscreen',
@@ -147,52 +149,52 @@ export const story = {
   ] satisfies StoryEvent[],
   gallery: [
     {
-      src: '/images/gallery/01-balaclavas.jpg',
+      src: siteAsset('/images/gallery/01-balaclavas.jpg'),
       alt: 'Костя и Ксюша в балаклавах',
       rotate: -2,
     },
     {
-      src: '/images/gallery/02-close-up.jpg',
+      src: siteAsset('/images/gallery/02-close-up.jpg'),
       alt: 'Близкое совместное фото Кости и Ксюши',
       rotate: 0,
     },
     {
-      src: '/images/gallery/03-mirror.jpg',
+      src: siteAsset('/images/gallery/03-mirror.jpg'),
       alt: 'Совместное фото Кости и Ксюши в зеркале',
       rotate: 1.5,
     },
     {
-      src: '/images/gallery/04-cheek-kiss.jpg',
+      src: siteAsset('/images/gallery/04-cheek-kiss.jpg'),
       alt: 'Костя целует Ксюшу в щёку',
       rotate: -1,
     },
     {
-      src: '/images/gallery/05-cafe.jpg',
+      src: siteAsset('/images/gallery/05-cafe.jpg'),
       alt: 'Смешное совместное селфи в кафе',
       rotate: 2,
     },
     {
-      src: '/images/gallery/06-sun.jpg',
+      src: siteAsset('/images/gallery/06-sun.jpg'),
       alt: 'Совместное селфи в солнечный день',
       rotate: -1.5,
     },
     {
-      src: '/images/gallery/08-park.jpg',
+      src: siteAsset('/images/gallery/08-park.jpg'),
       alt: 'Смешное фото Кости и Ксюши в парке',
       rotate: 1,
     },
     {
-      src: '/images/gallery/09-night-kiss.jpg',
+      src: siteAsset('/images/gallery/09-night-kiss.jpg'),
       alt: 'Костя целует Ксюшу в щёку вечером',
       rotate: -2,
     },
     {
-      src: '/images/gallery/10-night.jpg',
+      src: siteAsset('/images/gallery/10-night.jpg'),
       alt: 'Смешное совместное вечернее селфи',
       rotate: 1.5,
     },
     {
-      src: '/images/gallery/11-mirror.jpg',
+      src: siteAsset('/images/gallery/11-mirror.jpg'),
       alt: 'Костя и Ксюша вместе перед зеркалом',
       rotate: -0.5,
     },
@@ -205,18 +207,18 @@ export const story = {
   everyday: {
     title: 'Сближение.',
     text: 'Мы старались давать друг другу больше любви. Всё ещё стеснялись — но уже знали, что мы вместе.',
-    video: '/videos/slide-8.mp4',
+    video: siteAsset('/videos/slide-8.mp4'),
     galleryLabel: 'Совместные фотографии Кости и Ксюши',
   },
   soundtrack: {
     intro: {
       title: 'Любовь HD1080',
       artist: 'Каспийский Груз',
-      file: '/music/track-1.mp3' as string | null,
+      file: siteAsset('/music/track-1.mp3') as string | null,
     },
   },
   letter: {
-    image: '/images/story/birthday-letter.jpg',
+    image: siteAsset('/images/story/birthday-letter.jpg'),
     alt: 'Рукописное письмо Ксюши Косте на день рождения',
     quote: '«Люблю тебя, Костенька»',
   },
@@ -234,7 +236,7 @@ export const story = {
     ],
     signature: 'С днём рождения, Ксюша ❤️',
     author: '— Костя',
-    image: '/images/story/final-slide.jpg',
+    image: siteAsset('/images/story/final-slide.jpg'),
     imageAlt: 'Костя и Ксюша вместе',
   },
   footer: {

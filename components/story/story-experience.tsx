@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 
 import { story, type GalleryImage, type StoryEvent } from '@/src/data/story';
+import { siteAsset } from '@/src/lib/site-asset';
 
 const eventById = (id: string) => {
   const event = story.events.find((item) => item.id === id);
@@ -274,7 +275,7 @@ function CoverSlide({ onStart }: { onStart: () => void }) {
         className="absolute inset-0 -z-30"
       >
         <MemoryImage
-          src="/images/gallery/04-cheek-kiss.jpg"
+          src={siteAsset('/images/gallery/04-cheek-kiss.jpg')}
           alt="Костя целует Ксюшу в щёку"
           eager
           className="h-full w-full object-[56%_center] sm:object-center"
@@ -342,7 +343,7 @@ function BeginningSlide() {
       >
         <track
           kind="captions"
-          src="/captions/daivinchik.vtt"
+          src={siteAsset('/captions/daivinchik.vtt')}
           srcLang="ru"
           label="Русские субтитры"
           default
@@ -538,7 +539,7 @@ function CinematicEventSlide({
         >
           <track
             kind="captions"
-            src="/captions/her-birthday.vtt"
+            src={siteAsset('/captions/her-birthday.vtt')}
             srcLang="ru"
             label="Русские субтитры"
           />
@@ -1149,7 +1150,7 @@ export function StoryExperience() {
         >
           <track
             kind="captions"
-            src="/captions/song.vtt"
+            src={siteAsset('/captions/song.vtt')}
             srcLang="ru"
             label="Описание аудио"
           />
